@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #07080a; color: #e8ece8; font-family: "Space Grotesk", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  * { box-sizing: border-box; }
+  a { color: #d6f43a; text-decoration: none; }
+  a:hover { color: #eaffa0; }
+  @keyframes orbSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+  @keyframes pulseDot { 0%, 100% { opacity: .35; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes growBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  ::selection { background: #d6f43a; color: #07080a; }
+</style>
+</helmet>
+
+<sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+<div style="position: relative; min-height: 100vh; overflow-x: hidden; background: radial-gradient(120% 80% at 70% -10%, #10160f 0%, #07080a 55%, #07080a 100%);">
+
+  <div style="position: absolute; inset: 0 0 auto 0; height: 860px; overflow: hidden; pointer-events: none;">
+    <canvas ref="{{ canvasRef }}" style="width: 100%; height: 100%; display: block; opacity: .95;"></canvas>
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(7,8,10,0) 55%, #07080a 100%);"></div>
+  </div>
+
+  <header style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px 48px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="position: relative; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #eaffa0, #d6f43a 45%, #4b6b0d 100%); box-shadow: 0 0 22px rgba(214,244,58,.45);"></div>
+      <span style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em;">Open Rout AI</span>
+    </div>
+    <nav style="display: flex; align-items: center; gap: 34px; font-size: 14px; color: #9aa39a;">
+      <a href="#services" style="color: #9aa39a;" style-hover="{color: '#e8ece8'}">Services</a>
+      <a href="#routing" style="color: #9aa39a;" style-hover="{color: '#e8ece8'}">Routing</a>
+      <a href="#models" style="color: #9aa39a;" style-hover="{color: '#e8ece8'}">Models</a>
+      <button onClick="{{ openAuth }}" style="font-family: inherit; font-size: 14px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 999px; padding: 11px 22px; cursor: pointer; box-shadow: 0 0 0 1px rgba(214,244,58,.4), 0 8px 30px rgba(214,244,58,.18);" style-hover="{background: '#eaffa0'}">Sign up / Sign in</button>
+    </nav>
+  </header>
+
+  <section style="position: relative; max-width: 1400px; margin: 0 auto; padding: 120px 48px 0;">
+    <h1 style="margin: 0; font-size: 78px; line-height: .98; font-weight: 500; letter-spacing: -0.035em; max-width: 15ch; text-wrap: balance;">Every Agent. One Route.</h1>
+    <p style="margin: 26px 0 0; max-width: 52ch; font-size: 19px; line-height: 1.6; color: #9aa39a; text-wrap: pretty;">Open Rout AI builds the agents, routing, and software that make AI usable inside a real business. We handle model selection, integration, and the plumbing underneath it.</p>
+    <div style="display: flex; align-items: center; gap: 20px; margin-top: 40px;">
+      <button onClick="{{ openAuth }}" style="font-family: inherit; font-size: 16px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 999px; padding: 16px 32px; cursor: pointer; box-shadow: 0 12px 44px rgba(214,244,58,.24);" style-hover="{background: '#eaffa0'}">Sign up / Sign in</button>
+    </div>
+    <div style="height: 200px;"></div>
+  </section>
+
+  <section id="services" style="position: relative; max-width: 1400px; margin: 0 auto; padding: 40px 48px 0;">
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #6f776f;">What we do</div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 28px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; overflow: hidden;">
+      <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+        <div style="background: #0b0d0c; padding: 30px 26px 34px; min-height: 230px; display: flex; flex-direction: column;" style-hover="{background: '#101310'}">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #d6f43a;">{{ s.no }}</div>
+          <div style="margin-top: 22px; font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">{{ s.title }}</div>
+          <p style="margin: 12px 0 0; font-size: 14px; line-height: 1.6; color: #8d968d; text-wrap: pretty;">{{ s.body }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="routing" style="position: relative; max-width: 1400px; margin: 0 auto; padding: 120px 48px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;">
+    <div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #6f776f;">Routing</div>
+      <h2 style="margin: 22px 0 0; font-size: 44px; line-height: 1.05; font-weight: 500; letter-spacing: -0.03em; max-width: 20ch;">Requests find the cheapest model that can still do the job.</h2>
+      <p style="margin: 22px 0 0; font-size: 17px; line-height: 1.65; color: #9aa39a; max-width: 46ch; text-wrap: pretty;">One endpoint in front of every provider. Classifiers score each request, the router picks a model, and failover happens before your users notice.</p>
+      <div style="display: grid; gap: 14px; margin-top: 34px;">
+        <sc-for list="{{ routingPoints }}" as="p" hint-placeholder-count="3">
+          <div style="display: flex; align-items: baseline; gap: 14px; font-size: 15px; color: #c3c9c3;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #d6f43a; flex: none; transform: translateY(-3px);"></span>
+            {{ p }}
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="position: relative; aspect-ratio: 1; animation: floatY 9s ease-in-out infinite;">
+      <div style="position: absolute; inset: 12%; border-radius: 50%; background: radial-gradient(circle at 34% 26%, rgba(234,255,160,.9), rgba(214,244,58,.22) 40%, rgba(20,28,12,.9) 72%, rgba(7,8,10,.95) 100%); box-shadow: 0 0 120px rgba(214,244,58,.18), inset 0 0 80px rgba(0,0,0,.6);"></div>
+      <div style="position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(214,244,58,.2); animation: orbSpin 26s linear infinite;">
+        <div style="position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: #d6f43a; box-shadow: 0 0 16px #d6f43a;"></div>
+      </div>
+      <div style="position: absolute; inset: -8%; border-radius: 50%; border: 1px solid rgba(255,255,255,.07); transform: rotate(24deg); animation: orbSpin 44s linear infinite reverse;">
+        <div style="position: absolute; bottom: 6%; right: 8%; width: 6px; height: 6px; border-radius: 50%; background: #7fd6ff; box-shadow: 0 0 14px #7fd6ff;"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="models" style="position: relative; margin-top: 130px; border-top: 1px solid rgba(255,255,255,.07); border-bottom: 1px solid rgba(255,255,255,.07); padding: 22px 0; overflow: hidden;">
+    <div style="display: flex; width: max-content; gap: 56px; animation: ticker 34s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">
+      <sc-for list="{{ tickerItems }}" as="t" hint-placeholder-count="14">
+        <span style="white-space: nowrap;">{{ t }}</span>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="position: relative; max-width: 1400px; margin: 0 auto; padding: 130px 48px 150px; text-align: center;">
+    <h2 style="margin: 0; font-size: 52px; line-height: 1.05; font-weight: 500; letter-spacing: -0.03em;">Route your first request today.</h2>
+    <p style="margin: 20px auto 0; max-width: 44ch; font-size: 17px; line-height: 1.6; color: #9aa39a;">Create an account, add credits, and point your existing SDK at one endpoint.</p>
+    <button onClick="{{ openAuth }}" style="margin-top: 38px; font-family: inherit; font-size: 16px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 999px; padding: 16px 34px; cursor: pointer; box-shadow: 0 12px 44px rgba(214,244,58,.24);" style-hover="{background: '#eaffa0'}">Sign up / Sign in</button>
+  </section>
+
+  <footer style="position: relative; border-top: 1px solid rgba(255,255,255,.07); padding: 28px 48px; max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #5d655d;">
+    <span>Open Rout AI</span>
+    <span>hello@openrout.ai</span>
+  </footer>
+</div>
+</sc-if>
+
+<sc-if value="{{ authOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(4,5,6,.78); backdrop-filter: blur(8px);">
+  <div style="width: 420px; max-width: calc(100vw - 40px); background: #0b0d0c; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 34px 32px 30px; box-shadow: 0 40px 120px rgba(0,0,0,.7); animation: rise .28s ease both;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #eaffa0, #d6f43a 45%, #4b6b0d 100%);"></div>
+        <span style="font-size: 15px; font-weight: 600;">Open Rout AI</span>
+      </div>
+      <button onClick="{{ closeAuth }}" style="font-family: inherit; font-size: 18px; line-height: 1; color: #7b837b; background: transparent; border: 0; cursor: pointer;">×</button>
+    </div>
+    <div style="margin-top: 26px; display: flex; gap: 4px; padding: 4px; background: #111413; border-radius: 999px;">
+      <button onClick="{{ setSignUp }}" style="{{ signUpTabStyle }}">Sign up</button>
+      <button onClick="{{ setSignIn }}" style="{{ signInTabStyle }}">Sign in</button>
+    </div>
+    <div style="display: grid; gap: 12px; margin-top: 22px;">
+      <input placeholder="you@company.com" style="font-family: inherit; font-size: 14px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 13px 14px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.55)'}" />
+      <input type="password" placeholder="Password" style="font-family: inherit; font-size: 14px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 13px 14px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.55)'}" />
+    </div>
+    <button onClick="{{ enterApp }}" style="width: 100%; margin-top: 18px; font-family: inherit; font-size: 15px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 10px; padding: 14px; cursor: pointer;" style-hover="{background: '#eaffa0'}">{{ authCta }}</button>
+    <div style="margin-top: 16px; text-align: center; font-size: 12px; color: #6f776f;">Single sign-on available on enterprise plans.</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ payOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(4,5,6,.8); backdrop-filter: blur(8px); overflow: auto;">
+  <div style="width: 460px; max-width: 100%; background: #0b0d0c; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 28px 30px 26px; box-shadow: 0 40px 120px rgba(0,0,0,.7); animation: rise .28s ease both;">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 18px; font-weight: 600;">Add credits</div>
+        <div style="margin-top: 4px; font-size: 13px; color: #8d968d;">Balance {{ balanceLabel }} · charged once, no subscription</div>
+      </div>
+      <button onClick="{{ closePay }}" style="font-family: inherit; font-size: 18px; line-height: 1; color: #7b837b; background: transparent; border: 0; cursor: pointer;">×</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 22px;">
+      <sc-for list="{{ amountOptions }}" as="a" hint-placeholder-count="4">
+        <button onClick="{{ a.onClick }}" style="{{ a.style }}">{{ a.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div style="font-size: 12px; color: #8d968d;">Amount (USD)</div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 0 14px;">
+        <span style="font-size: 15px; color: #7b837b;">$</span>
+        <input value="{{ amount }}" onChange="{{ setAmount }}" inputmode="decimal" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #e8ece8; background: transparent; border: 0; padding: 13px 0; outline: none;" />
+      </div>
+    </div>
+
+    <div style="display: grid; gap: 10px; margin-top: 18px;">
+      <div style="font-size: 12px; color: #8d968d;">Card details</div>
+      <div style="display: flex; align-items: center; gap: 12px; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 13px 14px;">
+        <span style="display: flex; gap: 3px; flex: none;">
+          <span style="width: 20px; height: 13px; border-radius: 2px; background: #2b3126;"></span>
+          <span style="width: 20px; height: 13px; border-radius: 2px; background: #383f31;"></span>
+        </span>
+        <input placeholder="4242 4242 4242 4242" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e8ece8; background: transparent; border: 0; outline: none;" />
+        <input placeholder="MM / YY" style="width: 72px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e8ece8; background: transparent; border: 0; outline: none;" />
+        <input placeholder="CVC" style="width: 44px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e8ece8; background: transparent; border: 0; outline: none;" />
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input placeholder="Name on card" style="font-family: inherit; font-size: 14px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 13px 14px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+        <input placeholder="ZIP / Postal code" style="font-family: inherit; font-size: 14px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 13px 14px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+      </div>
+    </div>
+
+    <div style="display: grid; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.07); font-size: 13px;">
+      <div style="display: flex; justify-content: space-between; color: #8d968d;"><span>Credits</span><span style="font-family: 'JetBrains Mono', monospace; color: #c3c9c3;">{{ creditsLine }}</span></div>
+      <div style="display: flex; justify-content: space-between; color: #8d968d;"><span>Processing fee (2.9% + $0.30)</span><span style="font-family: 'JetBrains Mono', monospace; color: #c3c9c3;">{{ feeLine }}</span></div>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 15px; font-weight: 600;"><span>Total</span><span style="font-family: 'JetBrains Mono', monospace;">{{ totalLine }}</span></div>
+    </div>
+
+    <button onClick="{{ confirmPay }}" style="width: 100%; margin-top: 18px; font-family: inherit; font-size: 15px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 10px; padding: 14px; cursor: pointer;" style-hover="{background: '#eaffa0'}">{{ payLabel }}</button>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 14px; font-size: 11px; color: #6f776f;">
+      <span style="width: 5px; height: 5px; border-radius: 50%; background: #d6f43a;"></span>
+      Secured by Stripe · test mode
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="display: grid; grid-template-columns: 216px 1fr; min-height: 100vh; background: #07080a;">
+  <aside style="border-right: 1px solid rgba(255,255,255,.07); padding: 20px 14px; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0; align-self: start; height: 100vh;">
+    <button onClick="{{ exitApp }}" style="display: flex; align-items: center; gap: 10px; width: 100%; font-family: inherit; text-align: left; background: #0e110f; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; color: #e8ece8; font-size: 13px; font-weight: 500; cursor: pointer;" style-hover="{background: '#131714'}">
+      <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #eaffa0, #d6f43a 45%, #4b6b0d 100%); flex: none;"></span>
+      Default Workspace
+    </button>
+    <nav style="display: grid; gap: 2px;">
+      <a href="#usage" style="font-size: 13px; font-weight: 500; color: #9aa39a; padding: 10px 12px; border-radius: 8px;" style-hover="{background: 'rgba(214,244,58,.1)', color: '#d6f43a'}">Usage</a>
+      <a href="#routing-panel" style="font-size: 13px; font-weight: 500; color: #9aa39a; padding: 10px 12px; border-radius: 8px;" style-hover="{background: 'rgba(214,244,58,.1)', color: '#d6f43a'}">Routing</a>
+      <a href="#keys" style="font-size: 13px; font-weight: 500; color: #9aa39a; padding: 10px 12px; border-radius: 8px;" style-hover="{background: 'rgba(214,244,58,.1)', color: '#d6f43a'}">API Keys</a>
+      <a href="#credits" style="font-size: 13px; font-weight: 500; color: #9aa39a; padding: 10px 12px; border-radius: 8px;" style-hover="{background: 'rgba(214,244,58,.1)', color: '#d6f43a'}">Credits</a>
+      <a href="#billing" style="font-size: 13px; font-weight: 500; color: #9aa39a; padding: 10px 12px; border-radius: 8px;" style-hover="{background: 'rgba(214,244,58,.1)', color: '#d6f43a'}">Payment</a>
+    </nav>
+    <div style="margin-top: auto; padding: 14px 12px; border: 1px solid rgba(255,255,255,.07); border-radius: 12px;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">Balance</div>
+      <div style="margin-top: 6px; font-size: 20px; font-weight: 600;">{{ balanceLabel }}</div>
+      <button onClick="{{ addCredits }}" style="width: 100%; margin-top: 12px; font-family: inherit; font-size: 12px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 8px; padding: 9px; cursor: pointer;" style-hover="{background: '#eaffa0'}">Add Credits</button>
+    </div>
+  </aside>
+
+  <main style="padding: 36px 44px 100px; max-width: 1260px;">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+      <div>
+        <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em;">Dashboard</h1>
+        <div style="margin-top: 6px; font-size: 14px; color: #8d968d;">Personal Account: brent@blockcapitalinvest.com</div>
+      </div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6f776f;">Updated {{ updatedAt }}</div>
+    </div>
+
+    <section id="usage" style="margin-top: 34px; scroll-margin-top: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 17px; font-weight: 600;">This Week's Usage</div>
+        <a href="#usage" style="font-size: 13px;">View Activity →</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px;">
+        <sc-for list="{{ usageCards }}" as="c" hint-placeholder-count="3">
+          <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+            <div style="font-size: 13px; color: #8d968d;">{{ c.label }}</div>
+            <div style="margin-top: 6px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">{{ c.value }}</div>
+            <div style="display: flex; align-items: flex-end; gap: 8px; height: 74px; margin-top: 18px;">
+              <sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="7">
+                <div style="flex: 1; height: {{ b }}; min-height: 3px; border-radius: 3px; background: linear-gradient(to top, rgba(214,244,58,.35), #d6f43a); transform-origin: bottom; animation: growBar .7s cubic-bezier(.2,.7,.2,1) both;"></div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06); font-size: 13px;">
+              <span style="display: flex; align-items: center; gap: 8px; color: #c3c9c3;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #d6f43a;"></span>
+                {{ c.model }}
+              </span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8d968d;">{{ c.value }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="margin-top: 40px;">
+      <div style="font-size: 17px; font-weight: 600;">Top models today</div>
+      <div style="margin-top: 16px; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 30px 1.6fr 1fr .8fr .9fr 1.1fr; gap: 16px; padding: 13px 20px; background: #0b0d0c; border-bottom: 1px solid rgba(255,255,255,.07); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">
+          <span>#</span><span>Model</span><span>Provider</span><span>Latency</span><span>Cost / 1M</span><span>Share</span>
+        </div>
+        <sc-for list="{{ models }}" as="m" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 30px 1.6fr 1fr .8fr .9fr 1.1fr; gap: 16px; align-items: center; padding: 13px 20px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 14px;" style-hover="{background: '#0d100e'}">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6f776f;">{{ m.rank }}</span>
+            <span style="font-weight: 500;">{{ m.name }}</span>
+            <span style="color: #8d968d;">{{ m.provider }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c3c9c3;">{{ m.latency }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c3c9c3;">{{ m.cost }}</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+              <span style="position: relative; flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden;">
+                <span style="position: absolute; inset: 0 auto 0 0; width: {{ m.share }}; background: #d6f43a; border-radius: 2px;"></span>
+              </span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8d968d; width: 36px; text-align: right;">{{ m.share }}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section id="routing-panel" style="margin-top: 46px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.07); scroll-margin-top: 24px;">
+      <div style="font-size: 17px; font-weight: 600;">Routing</div>
+      <div style="display: grid; grid-template-columns: 190px 1fr; gap: 40px; margin-top: 22px;">
+        <div>
+          <div style="font-size: 15px; font-weight: 600;">Auto Router</div>
+          <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: #8d968d; text-wrap: pretty;">Configure which models the Auto Router can route to.</p>
+        </div>
+        <div>
+          <div style="font-size: 13px; color: #8d968d;">Allowed Models</div>
+          <textarea placeholder="anthropic/*, openai/gpt-4o, google/*" rows="3" style="width: 100%; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e8ece8; background: #0b0d0c; border: 1px solid rgba(255,255,255,.09); border-radius: 10px; padding: 13px 14px; outline: none; resize: vertical;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}"></textarea>
+          <div style="margin-top: 8px; font-size: 12px; line-height: 1.55; color: #7b837b;">Comma or newline separated patterns. Wildcards supported. Leave empty to use all supported models.</div>
+          <div style="margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c3d68a;">38 models matched</div>
+
+          <div style="margin-top: 24px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.06);">
+            <div style="font-size: 13px; color: #8d968d;">Cost / Quality Tradeoff</div>
+            <div style="display: flex; align-items: center; gap: 16px; margin-top: 12px;">
+              <span style="font-size: 13px; color: #c3c9c3;">Quality</span>
+              <input type="range" min="0" max="10" step="1" value="{{ tradeoff }}" onChange="{{ setTradeoff }}" style="flex: 1; accentColor: #d6f43a; height: 4px; cursor: pointer;" />
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; width: 16px; text-align: right;">{{ tradeoff }}</span>
+              <span style="font-size: 13px; color: #c3c9c3;">Cost</span>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #7b837b;">0 = best model regardless of cost. 10 = cheapest model wins.</div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: 22px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.06);">
+            <span style="font-size: 13px; color: #c3c9c3;">Prevent overrides</span>
+            <button onClick="{{ toggleOverrides }}" style="{{ overridesTrackStyle }}"><span style="{{ overridesKnobStyle }}"></span></button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.06);">
+            <div>
+              <div style="font-size: 13px; color: #8d968d;">Default Provider Sort</div>
+              <select style="width: 100%; margin-top: 8px; font-family: inherit; font-size: 13px; color: #e8ece8; background: #0b0d0c; border: 1px solid rgba(255,255,255,.09); border-radius: 10px; padding: 11px 12px; outline: none;">
+                <option>Default (balanced)</option>
+                <option>Lowest price</option>
+                <option>Lowest latency</option>
+                <option>Highest uptime</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #8d968d;">Default Model</div>
+              <select style="width: 100%; margin-top: 8px; font-family: inherit; font-size: 13px; color: #e8ece8; background: #0b0d0c; border: 1px solid rgba(255,255,255,.09); border-radius: 10px; padding: 11px 12px; outline: none;">
+                <option>Claude Sonnet 4.5</option>
+                <option>GPT-5 mini</option>
+                <option>Gemini 2.5 Flash</option>
+                <option>Kimi K3</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 22px;">
+            <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 8px; padding: 10px 22px; cursor: pointer;" style-hover="{background: '#eaffa0'}">Save</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="keys" style="margin-top: 46px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.07); scroll-margin-top: 24px;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+        <div>
+          <div style="font-size: 17px; font-weight: 600;">API Keys</div>
+          <div style="margin-top: 6px; font-size: 13px; color: #8d968d;">Create and manage your API keys.</div>
+        </div>
+        <button onClick="{{ newKey }}" style="font-family: inherit; font-size: 13px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer;" style-hover="{background: '#eaffa0'}">+ New Key</button>
+      </div>
+      <div style="margin-top: 18px; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; overflow: hidden;">
+        <div style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,.07); background: #0b0d0c;">
+          <input value="{{ keyQuery }}" onChange="{{ setKeyQuery }}" placeholder="Search by name..." style="width: 300px; max-width: 100%; font-family: inherit; font-size: 13px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; padding: 10px 12px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+        </div>
+        <div style="display: grid; grid-template-columns: 1.5fr .9fr .7fr .9fr .7fr .8fr; gap: 16px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,.07); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">
+          <span>Key</span><span>Guardrails</span><span>Expires</span><span>Last Used</span><span>Key usage</span><span>Key limit</span>
+        </div>
+        <sc-for list="{{ visibleKeys }}" as="k" hint-placeholder-count="3">
+          <div style="display: grid; grid-template-columns: 1.5fr .9fr .7fr .9fr .7fr .8fr; gap: 16px; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 14px;" style-hover="{background: '#0d100e'}">
+            <span>
+              <span style="display: block; font-weight: 500;">{{ k.name }}</span>
+              <span style="display: block; margin-top: 3px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7b837b;">{{ k.token }}</span>
+            </span>
+            <span style="color: #8d968d; font-size: 13px;">{{ k.guardrails }}</span>
+            <span style="color: #8d968d; font-size: 13px;">{{ k.expires }}</span>
+            <span style="color: #8d968d; font-size: 13px;">{{ k.lastUsed }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c3c9c3;">{{ k.usage }}</span>
+            <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8d968d;">
+              unlimited
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #c3d68a; border: 1px solid rgba(214,244,58,.3); border-radius: 999px; padding: 2px 8px;">TOTAL</span>
+            </span>
+          </div>
+        </sc-for>
+        <div style="padding: 12px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5d655d;">{{ keyCountLabel }}</div>
+      </div>
+    </section>
+
+    <section id="credits" style="margin-top: 46px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.07); scroll-margin-top: 24px;">
+      <div style="font-size: 17px; font-weight: 600;">Credits</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 18px;">
+        <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">Total available</div>
+          <div style="margin-top: 10px; display: flex; align-items: baseline; gap: 4px;">
+            <span style="font-size: 22px; color: #8d968d;">$</span>
+            <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;">{{ balance }}</span>
+          </div>
+          <div style="margin-top: 8px; font-size: 13px; color: #8d968d;">Pay-as-you-go balance</div>
+        </div>
+        <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 15px; font-weight: 600;">Buy Credits</div>
+            <button onClick="{{ toggleCrypto }}" style="display: flex; align-items: center; gap: 10px; font-family: inherit; font-size: 13px; color: #9aa39a; background: transparent; border: 0; cursor: pointer; padding: 0;">
+              Use crypto
+              <span style="{{ cryptoTrackStyle }}"><span style="{{ cryptoKnobStyle }}"></span></span>
+            </button>
+          </div>
+          <button onClick="{{ addCredits }}" style="width: 100%; margin-top: 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 10px; padding: 13px; cursor: pointer;" style-hover="{background: '#eaffa0'}">Add Credits</button>
+          <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 13px;">
+            <a href="#usage">View Usage</a>
+            <a href="#credits">Redeem Promo Code</a>
+          </div>
+        </div>
+        <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 15px; font-weight: 600;">Auto Top-Up</div>
+            <button onClick="{{ toggleAuto }}" style="font-family: inherit; font-size: 13px; font-weight: 600; color: #d6f43a; background: transparent; border: 0; cursor: pointer; padding: 0;">{{ autoLabel }}</button>
+          </div>
+          <p style="margin: 12px 0 0; font-size: 13px; line-height: 1.6; color: #8d968d; text-wrap: pretty;">Automatically purchase credits when your balance falls below a threshold you set.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin-top: 30px;">
+        <div style="font-size: 15px; font-weight: 600;">Recent Transactions</div>
+        <a href="#credits" style="font-size: 13px;">History</a>
+      </div>
+      <div style="margin-top: 14px; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 1.6fr .8fr .8fr; gap: 16px; padding: 12px 20px; background: #0b0d0c; border-bottom: 1px solid rgba(255,255,255,.07); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">
+          <span>Date</span><span>Amount</span><span style="text-align: right;">Actions</span>
+        </div>
+        <sc-for list="{{ transactions }}" as="t" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 1.6fr .8fr .8fr; gap: 16px; align-items: center; padding: 13px 20px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 14px;" style-hover="{background: '#0d100e'}">
+            <span style="color: #c3c9c3;">{{ t.date }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px;">{{ t.amount }}</span>
+            <span style="text-align: right;"><a href="#credits" style="font-size: 13px;">View Invoice</a></span>
+          </div>
+        </sc-for>
+        <div style="padding: 12px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5d655d;">{{ txCountLabel }}</div>
+      </div>
+    </section>
+
+    <section id="billing" style="margin-top: 46px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.07); scroll-margin-top: 24px;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+        <div>
+          <div style="font-size: 17px; font-weight: 600;">Payment</div>
+          <div style="margin-top: 6px; font-size: 13px; color: #8d968d;">Cards and billing are handled by Stripe. Open Rout AI never stores card numbers.</div>
+        </div>
+        <button onClick="{{ openPay }}" style="font-family: inherit; font-size: 13px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer;" style-hover="{background: '#eaffa0'}">+ Add Payment Method</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px;">
+        <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">Payment methods</div>
+          <div style="display: grid; gap: 10px; margin-top: 14px;">
+            <sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 13px 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px;" style-hover="{background: '#0f120f'}">
+                <span style="display: flex; align-items: center; justify-content: center; width: 40px; height: 26px; border-radius: 5px; background: #171b16; border: 1px solid rgba(255,255,255,.1); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .06em; color: #c3c9c3; flex: none;">{{ c.brand }}</span>
+                <span style="flex: 1;">
+                  <span style="display: block; font-size: 14px; font-weight: 500;">{{ c.number }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: 12px; color: #7b837b;">Expires {{ c.exp }}</span>
+                </span>
+                <span style="{{ c.badgeStyle }}">{{ c.badge }}</span>
+                <button onClick="{{ c.onRemove }}" style="font-family: inherit; font-size: 12px; color: #7b837b; background: transparent; border: 0; cursor: pointer;" style-hover="{color: '#e8ece8'}">Remove</button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 14px; font-size: 12px; color: #7b837b;">{{ cardsNote }}</div>
+        </div>
+
+        <div style="background: #0b0d0c; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 18px 20px 20px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6f776f;">Billing details</div>
+          <div style="display: grid; gap: 12px; margin-top: 14px;">
+            <div>
+              <div style="font-size: 13px; color: #8d968d;">Billing email</div>
+              <input value="brent@blockcapitalinvest.com" style="width: 100%; margin-top: 6px; font-family: inherit; font-size: 13px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; padding: 11px 12px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #8d968d;">Company name (appears on invoices)</div>
+              <input placeholder="Open Rout AI, LLC" style="width: 100%; margin-top: 6px; font-family: inherit; font-size: 13px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; padding: 11px 12px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #8d968d;">Tax ID / VAT (optional)</div>
+              <input placeholder="—" style="width: 100%; margin-top: 6px; font-family: inherit; font-size: 13px; color: #e8ece8; background: #111413; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; padding: 11px 12px; outline: none;" style-focus="{borderColor: 'rgba(214,244,58,.5)'}" />
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 18px;">
+            <a href="#billing" style="font-size: 13px;">Open Stripe billing portal →</a>
+            <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #07080a; background: #d6f43a; border: 0; border-radius: 8px; padding: 10px 20px; cursor: pointer;" style-hover="{background: '#eaffa0'}">Save</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;landing&quot;,&quot;options&quot;:[&quot;landing&quot;,&quot;dashboard&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#d6f43a&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#d6f43a&quot;,&quot;#7fd6ff&quot;,&quot;#ff7a45&quot;,&quot;#c9a4ff&quot;]},&quot;animationSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = { view: null, authOpen: false, authMode: 'signup', crypto: false, auto: false, overrides: false, tradeoff: 7, balance: 128.40, keyQuery: '', extraKeys: 0, payOpen: false, amount: '50', paying: false, cards: [
+    { brand: 'VISA', number: '•••• •••• •••• 4242', exp: '04 / 2029', badge: 'Default' },
+    { brand: 'AMEX', number: '•••• •••• •••• 1005', exp: '11 / 2027', badge: 'Backup' }
+  ] };
+
+  constructor(props) {
+    super(props);
+    this.canvasRef = React.createRef();
+  }
+
+  componentDidMount() { this.startCanvas(); }
+  componentDidUpdate() { this.startCanvas(); }
+  componentWillUnmount() { this.stopCanvas(); }
+
+  stopCanvas() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+    if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    this._boundCanvas = null;
+  }
+
+  startCanvas() {
+    const cv = this.canvasRef.current;
+    if (!cv) { if (this._raf) this.stopCanvas(); return; }
+    if (this._boundCanvas === cv) return;
+    this.stopCanvas();
+    this._boundCanvas = cv;
+    const ctx = cv.getContext('2d');
+    let W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => {
+      const r = cv.getBoundingClientRect();
+      W = Math.max(r.width, 320); H = Math.max(r.height, 320);
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    this._ro = new ResizeObserver(resize);
+    this._ro.observe(cv);
+
+    const N = 7;
+    const nodes = Array.from({ length: N }, (_, i) => ({ a: (i / N) * Math.PI * 2, r: 0.30 + (i % 3) * 0.055, sp: 0.00016 + (i % 4) * 0.00007 }));
+    const packets = nodes.map((_, i) => ({ t: Math.random(), sp: 0.0022 + Math.random() * 0.0032, i }));
+    const speed = this.props.animationSpeed ?? 1;
+    const accent = this.props.accentColor ?? '#d6f43a';
+
+    const draw = (time) => {
+      ctx.clearRect(0, 0, W, H);
+      const cx = W * 0.62, cy = H * 0.46, base = Math.min(W, H);
+
+      const blobs = [[0.18, 0.30, 0.34, 'rgba(214,244,58,0.055)'], [0.85, 0.18, 0.26, 'rgba(127,214,255,0.05)'], [0.55, 0.86, 0.30, 'rgba(214,244,58,0.035)']];
+      blobs.forEach(([bx, by, br, col], k) => {
+        const dy = Math.sin(time * 0.00018 * speed + k) * 22;
+        const g = ctx.createRadialGradient(W * bx, H * by + dy, 0, W * bx, H * by + dy, base * br);
+        g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(W * bx, H * by + dy, base * br, 0, Math.PI * 2); ctx.fill();
+      });
+
+      const pos = nodes.map(n => {
+        const a = n.a + time * n.sp * speed;
+        return { x: cx + Math.cos(a) * base * n.r * 1.35, y: cy + Math.sin(a) * base * n.r * 0.72 };
+      });
+
+      ctx.lineWidth = 1;
+      pos.forEach(p => {
+        ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+        ctx.beginPath(); ctx.moveTo(cx, cy);
+        ctx.quadraticCurveTo((cx + p.x) / 2, (cy + p.y) / 2 - base * 0.10, p.x, p.y);
+        ctx.stroke();
+      });
+
+      packets.forEach(pk => {
+        pk.t += pk.sp * speed;
+        if (pk.t > 1) pk.t = 0;
+        const p = pos[pk.i];
+        const t = pk.t, mt = 1 - t;
+        const qx = (cx + p.x) / 2, qy = (cy + p.y) / 2 - base * 0.10;
+        const x = mt * mt * cx + 2 * mt * t * qx + t * t * p.x;
+        const y = mt * mt * cy + 2 * mt * t * qy + t * t * p.y;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 16);
+        g.addColorStop(0, accent); g.addColorStop(0.25, 'rgba(214,244,58,0.35)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f2ffc4'; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+      });
+
+      pos.forEach((p, i) => {
+        const rr = 5 + (i % 3);
+        const g = ctx.createRadialGradient(p.x - rr * 0.4, p.y - rr * 0.4, 0, p.x, p.y, rr * 3.4);
+        g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.3, 'rgba(214,244,58,0.35)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, rr * 3.4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#eaffa0'; ctx.beginPath(); ctx.arc(p.x, p.y, rr * 0.55, 0, Math.PI * 2); ctx.fill();
+      });
+
+      const cr = base * 0.10;
+      const cg = ctx.createRadialGradient(cx - cr * 0.4, cy - cr * 0.45, cr * 0.05, cx, cy, cr);
+      cg.addColorStop(0, 'rgba(245,255,205,0.95)'); cg.addColorStop(0.35, 'rgba(214,244,58,0.5)'); cg.addColorStop(0.75, 'rgba(48,66,16,0.55)'); cg.addColorStop(1, 'rgba(7,8,10,0.1)');
+      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
+      const halo = ctx.createRadialGradient(cx, cy, cr * 0.9, cx, cy, cr * 2.6);
+      halo.addColorStop(0, 'rgba(214,244,58,0.14)'); halo.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, cr * 2.6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(214,244,58,0.28)'; ctx.lineWidth = 1;
+      const rot = time * 0.00022 * speed;
+      for (let k = 0; k < 3; k++) {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot + k * 1.05);
+        ctx.beginPath(); ctx.ellipse(0, 0, cr * (1.5 + k * 0.35), cr * (0.42 + k * 0.14), 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      this._raf = requestAnimationFrame(draw);
+    };
+    this._raf = requestAnimationFrame(draw);
+  }
+
+  tabStyle(active) {
+    return {
+      flex: 1, fontFamily: 'inherit', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: 0,
+      borderRadius: '999px', padding: '10px 0',
+      background: active ? '#d6f43a' : 'transparent', color: active ? '#07080a' : '#8d968d'
+    };
+  }
+
+  track(on) {
+    return { width: '38px', height: '22px', borderRadius: '999px', background: on ? '#d6f43a' : '#22261f', border: 0, padding: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: on ? 'flex-end' : 'flex-start', transition: 'background .2s' };
+  }
+  knob(on) {
+    return { width: '16px', height: '16px', borderRadius: '50%', background: on ? '#07080a' : '#7b837b', display: 'block' };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const view = s.view ?? (this.props.startScreen === 'dashboard' ? 'app' : 'landing');
+    const bal = s.balance.toFixed(2);
+    const amt = Math.max(0, Number(s.amount) || 0);
+    const fee = amt > 0 ? amt * 0.029 + 0.30 : 0;
+    const bars = a => a.map(v => v + '%');
+
+    const keys = [
+      { name: 'BSAC 2', token: 'sk-or-v1-84d … c4c', guardrails: 'No guardrails', expires: 'Never', lastUsed: 'Never', usage: '$0.000' },
+      { name: 'bsac sub agents', token: 'sk-or-v1-3a7 … e2d', guardrails: 'No guardrails', expires: 'Never', lastUsed: '10 days ago', usage: '$0.101' },
+      { name: 'BSAC', token: 'sk-or-v1-8fe … 31a', guardrails: 'No guardrails', expires: 'Never', lastUsed: '3 hours ago', usage: '$2,149.61' }
+    ];
+    for (let i = 0; i < s.extraKeys; i++) {
+      keys.push({ name: 'New key ' + (i + 1), token: 'sk-or-v1-new … ' + (100 + i), guardrails: 'No guardrails', expires: 'Never', lastUsed: 'Never', usage: '$0.000' });
+    }
+    const q = s.keyQuery.trim().toLowerCase();
+    const visibleKeys = q ? keys.filter(k => k.name.toLowerCase().includes(q)) : keys;
+
+    const transactions = [
+      { date: 'Jul 19, 2026 at 9:38 PM', amount: '$400.00' },
+      { date: 'Jul 14, 2026 at 10:47 AM', amount: '$400.00' },
+      { date: 'Jul 1, 2026 at 3:48 PM', amount: '$400.00' },
+      { date: 'Jul 1, 2026 at 2:07 PM', amount: '$50.00' },
+      { date: 'Jun 27, 2026 at 2:32 PM', amount: '$400.00' },
+      { date: 'Apr 30, 2026 at 1:26 PM', amount: '$400.00' }
+    ];
+
+    return {
+      canvasRef: this.canvasRef,
+      isLanding: view === 'landing',
+      isApp: view === 'app',
+      authOpen: s.authOpen,
+      openAuth: () => this.setState({ authOpen: true }),
+      closeAuth: () => this.setState({ authOpen: false }),
+      setSignUp: () => this.setState({ authMode: 'signup' }),
+      setSignIn: () => this.setState({ authMode: 'signin' }),
+      signUpTabStyle: this.tabStyle(s.authMode === 'signup'),
+      signInTabStyle: this.tabStyle(s.authMode === 'signin'),
+      authCta: s.authMode === 'signup' ? 'Create account' : 'Continue',
+      enterApp: () => this.setState({ view: 'app', authOpen: false }),
+      exitApp: () => this.setState({ view: 'landing' }),
+
+      balance: bal,
+      balanceLabel: '$' + bal,
+      updatedAt: 'just now',
+      addCredits: () => this.setState({ payOpen: true, paying: false }),
+      openPay: () => this.setState({ payOpen: true, paying: false }),
+      closePay: () => this.setState({ payOpen: false, paying: false }),
+      payOpen: s.payOpen,
+      amount: s.amount,
+      setAmount: e => this.setState({ amount: e.target.value.replace(/[^0-9.]/g, '') }),
+      amountOptions: ['25', '50', '100', '400'].map(v => ({
+        label: '$' + v,
+        onClick: () => this.setState({ amount: v }),
+        style: {
+          fontFamily: 'inherit', fontSize: '14px', fontWeight: 600, cursor: 'pointer', padding: '11px 0',
+          borderRadius: '9px', border: '1px solid ' + (s.amount === v ? '#d6f43a' : 'rgba(255,255,255,.1)'),
+          background: s.amount === v ? 'rgba(214,244,58,.12)' : '#111413',
+          color: s.amount === v ? '#d6f43a' : '#c3c9c3'
+        }
+      })),
+      creditsLine: '$' + amt.toFixed(2),
+      feeLine: '$' + fee.toFixed(2),
+      totalLine: '$' + (amt + fee).toFixed(2),
+      payLabel: s.paying ? 'Payment confirmed' : 'Pay $' + (amt + fee).toFixed(2),
+      confirmPay: () => {
+        this.setState({ paying: true });
+        setTimeout(() => this.setState(st => ({ balance: st.balance + amt, payOpen: false, paying: false })), 900);
+      },
+      cards: s.cards.map((c, i) => ({
+        brand: c.brand, number: c.number, exp: c.exp, badge: c.badge,
+        badgeStyle: {
+          fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', letterSpacing: '.08em', textTransform: 'uppercase',
+          border: '1px solid ' + (i === 0 ? 'rgba(214,244,58,.35)' : 'rgba(255,255,255,.14)'),
+          color: i === 0 ? '#c3d68a' : '#8d968d', borderRadius: '999px', padding: '3px 9px'
+        },
+        onRemove: () => this.setState(st => ({ cards: st.cards.filter((_, j) => j !== i) }))
+      })),
+      cardsNote: s.cards.length ? 'Charges run against the default card. Stripe handles 3-D Secure when required.' : 'No payment method on file. Add one to enable purchases and auto top-up.',
+      toggleCrypto: () => this.setState(st => ({ crypto: !st.crypto })),
+      cryptoTrackStyle: this.track(s.crypto),
+      cryptoKnobStyle: this.knob(s.crypto),
+      toggleAuto: () => this.setState(st => ({ auto: !st.auto })),
+      autoLabel: s.auto ? 'Enabled' : 'Enable',
+      toggleOverrides: () => this.setState(st => ({ overrides: !st.overrides })),
+      overridesTrackStyle: this.track(s.overrides),
+      overridesKnobStyle: this.knob(s.overrides),
+      tradeoff: s.tradeoff,
+      setTradeoff: e => this.setState({ tradeoff: Number(e.target.value) }),
+
+      keyQuery: s.keyQuery,
+      setKeyQuery: e => this.setState({ keyQuery: e.target.value }),
+      newKey: () => this.setState(st => ({ extraKeys: st.extraKeys + 1, keyQuery: '' })),
+      visibleKeys,
+      keyCountLabel: visibleKeys.length + (visibleKeys.length === 1 ? ' key' : ' keys'),
+
+      usageCards: [
+        { label: 'Spend', value: '$234.19', model: 'Claude Opus 4.8', bars: bars([12, 8, 5, 46, 74, 34, 66]) },
+        { label: 'Requests', value: '469', model: 'Claude Opus 4.8', bars: bars([14, 9, 11, 40, 78, 44, 70]) },
+        { label: 'Tokens', value: '158.7M', model: 'Claude Opus 4.8', bars: bars([10, 12, 6, 38, 86, 36, 62]) }
+      ],
+      models: [
+        { rank: '1', name: 'Claude Sonnet 4.5', provider: 'Anthropic', latency: '0.61s', cost: '$3.00', share: '24%' },
+        { rank: '2', name: 'GPT-5 mini', provider: 'OpenAI', latency: '0.48s', cost: '$0.45', share: '19%' },
+        { rank: '3', name: 'Gemini 2.5 Flash', provider: 'Google', latency: '0.39s', cost: '$0.30', share: '17%' },
+        { rank: '4', name: 'Claude Opus 4.5', provider: 'Anthropic', latency: '1.12s', cost: '$15.00', share: '13%' },
+        { rank: '5', name: 'Llama 4 Maverick', provider: 'Meta', latency: '0.44s', cost: '$0.27', share: '11%' },
+        { rank: '6', name: 'DeepSeek V3', provider: 'DeepSeek', latency: '0.72s', cost: '$0.28', share: '9%' }
+      ],
+      transactions,
+      txCountLabel: transactions.length + ' transactions',
+
+      services: [
+        { no: '01', title: 'Agent building', body: 'Task-scoped agents with tools, memory, and evaluation harnesses that keep behavior stable in production.' },
+        { no: '02', title: 'LLM routing', body: 'One endpoint across providers. Cost, latency, and quality budgets decide which model answers.' },
+        { no: '03', title: 'Software building', body: 'Full applications around the model layer: interfaces, pipelines, and services your team owns.' },
+        { no: '04', title: 'Business integration', body: 'Compatibility review of your current stack, then the connectors and guardrails to make AI fit it.' }
+      ],
+      routingPoints: [
+        'Automatic failover across providers and regions.',
+        'Per-request cost ceilings and latency targets.',
+        'Full request logs, traces, and spend attribution.'
+      ],
+      tickerItems: (() => {
+        const t = ['Anthropic', 'OpenAI', 'Google', 'Meta', 'Mistral', 'xAI', 'DeepSeek', 'Cohere', 'Amazon Bedrock', 'Azure AI', 'Together', 'Groq'];
+        return t.concat(t);
+      })()
+    };
+  }
+}
+</script>
+</body>
+</html>
