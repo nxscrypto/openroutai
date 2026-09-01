@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #07080a;
+    color: #e8ece8;
+    font-family: 'Space Grotesk', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: #d6f43a; color: #07080a; }
+}
+
+@layer utilities {
+  /* Hairline helpers used throughout the design */
+  .hairline         { border: 1px solid rgba(255,255,255,.07); }
+  .hairline-strong  { border: 1px solid rgba(255,255,255,.1); }
+  .hairline-soft    { border-color: rgba(255,255,255,.05); }
+  .divider-h        { height: 1px; background: rgba(255,255,255,.07); }
+  .divider-h-strong { height: 1px; background: rgba(255,255,255,.1); }
+
+  /* Mono uppercase eyebrow labels */
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6f776f;
+  }
+  .eyebrow-tight { letter-spacing: 0.1em; }
+}
