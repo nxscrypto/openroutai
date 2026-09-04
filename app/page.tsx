@@ -205,7 +205,34 @@ function AuthModal({
   onClose: () => void;
 }) {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit() {
+    setErr(null);
+    setBusy(true);
+    try {
+      const url = mode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+      const body = mode === 'signup' ? { email, password: pw, name } : { email, password: pw };
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        setErr(j.error || 'Authentication failed');
+        return;
+      }
+      window.location.href = '/settings';
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div
@@ -232,7 +259,7 @@ function AuthModal({
           {(['signup', 'signin'] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { setMode(m); setErr(null); }}
               className={`flex-1 text-[13px] font-semibold rounded-full py-[10px] transition-colors ${mode === m ? 'bg-accent text-bg' : 'bg-transparent text-text-4 hover:text-text'}`}
             >
               {m === 'signup' ? 'Sign up' : 'Sign in'}
@@ -241,33 +268,53 @@ function AuthModal({
         </div>
 
         <div className="grid gap-3">
+          {mode === 'signup' && (
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              className="bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] outline-none focus:border-accent/55 placeholder:text-text-5"
+            />
+          )}
           <input
             type="email"
             placeholder="you@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] outline-none focus:border-accent/55 placeholder:text-text-5"
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min 8 chars)"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             className="bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] outline-none focus:border-accent/55 placeholder:text-text-5"
           />
         </div>
 
+        {err && (
+          <div className="mt-3 text-[12.5px] text-[#ff8a80] bg-[#3a1717] rounded-[8px] px-3 py-2">{err}</div>
+        )}
+
         <button
-          className="mt-5 w-full text-[15px] font-semibold bg-accent text-bg rounded-[10px] py-[14px] hover:bg-accent-hover transition-colors"
-          onClick={() => {
-            // stub: production wiring (Auth.js / Clerk / Supabase) goes here.
-            window.location.href = '/dashboard';
-          }}
+          className="mt-5 w-full text-[15px] font-semibold bg-accent text-bg rounded-[10px] py-[14px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+          onClick={submit}
+          disabled={busy}
         >
-          {mode === 'signup' ? 'Create account' : 'Continue'}
+          {busy ? 'Working…' : mode === 'signup' ? 'Create account' : 'Continue'}
         </button>
 
-        <div className="text-center mt-4 text-[12px] text-text-6">Single sign-on available on enterprise plans.</div>
+        <div className="text-center mt-4 text-[12px] text-text-6">
+          {mode === 'signup' ? (
+            <>Already have an account? <a href="/login" className="text-accent hover:underline">Log in</a></>
+          ) : (
+            <>New here? <a href="/signup" className="text-accent hover:underline">Create an account</a></>
+          )}
+        </div>
       </div>
     </div>
   );

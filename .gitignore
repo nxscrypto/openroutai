@@ -12,3 +12,10 @@ yarn-error.log*
 .idea
 .vscode
 design-reference/
+
+# Scratch CC API probes / push scripts
+cc_*.py
+get_refresh.js
+push.py
+push.sh
+railway_status.py
