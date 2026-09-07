@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, user: { id: user.id, email: user.email } });
   } catch (e) {
-    console.error('[signup] error:', (e as Error).message);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('[signup] error:', (e as Error).message, (e as Error).stack);
+    return NextResponse.json({ error: 'Server error', detail: (e as Error).message }, { status: 500 });
   }
-}
+});
