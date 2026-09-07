@@ -44,4 +44,4 @@ export async function POST(req: NextRequest) {
     console.error('[signup] error:', (e as Error).message, (e as Error).stack);
     return NextResponse.json({ error: 'Server error', detail: (e as Error).message }, { status: 500 });
   }
-});
+}
