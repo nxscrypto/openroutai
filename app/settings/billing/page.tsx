@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
-import { getStripe } from '@/lib/stripe';
-import { stripeConfigured } from '@/lib/stripe';
+import { stripeConfigured, getStripe } from '@/lib/stripe';
+import AddCardForm from './AddCardForm';
 
 interface Card {
   stripe_payment_method_id: string;
@@ -122,31 +122,19 @@ export default async function BillingPage() {
         </div>
       )}
 
-      {/* Payment methods — always show Add card button when Stripe is configured */}
+      {/* Payment methods — inline add-card form on our own page */}
       <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-1">Payment methods</div>
             <div className="text-[14px] text-text-2">Cards on file for future charges</div>
           </div>
-          {stripeReady && (
-            <form action="/api/stripe/checkout" method="POST">
-              <button
-                type="submit"
-                className="text-[13px] font-semibold text-bg bg-accent rounded-full px-5 py-2.5 shadow-btn-primary hover:bg-accent-hover transition-colors"
-              >
-                Add card
-              </button>
-            </form>
-          )}
         </div>
 
         {cards.rows.length === 0 ? (
-          <div className="text-[13px] text-text-4 py-4 text-center border border-dashed border-border rounded-[10px]">
-            No cards on file yet.
-          </div>
+          <div className="text-[13px] text-text-4 mb-4">No cards on file yet.</div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 mb-5">
             {cards.rows.map((c) => (
               <div key={c.stripe_payment_method_id} className="flex items-center justify-between bg-card-alt hairline rounded-[10px] px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -163,6 +151,18 @@ export default async function BillingPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {stripeReady && (
+          <div className="mt-4 pt-5 border-t border-border">
+            <div className="text-[12px] uppercase tracking-[0.16em] text-text-4 mb-3">Add a new card</div>
+            <AddCardForm
+              onAdded={() => {
+                // Server components can't navigate; the form sets ?added=1 via return_url
+                // and the page-level reload will re-render with the new card.
+              }}
+            />
           </div>
         )}
       </div>
