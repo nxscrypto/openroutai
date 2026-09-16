@@ -176,7 +176,10 @@ export default async function BillingPage() {
               const cur = inv.currency.toUpperCase();
               const created = new Date(inv.created_at);
               const isPaid = inv.status === 'paid';
-              const isRecurring = inv.kind === 'subscription';
+              // Recurring if explicit kind set, OR description mentions subscription/monthly
+              const isRecurring =
+                inv.kind === 'subscription' ||
+                /subscription|month|per month/i.test(inv.description || '');
               return (
                 <div key={inv.id} className="flex items-center justify-between bg-card-alt hairline rounded-[10px] px-4 py-3">
                   <div className="flex-1">
