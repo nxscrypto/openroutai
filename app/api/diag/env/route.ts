@@ -17,6 +17,7 @@ export async function GET() {
     stripe_secret: Boolean(process.env.stripe_secret),
     stripe_publishable_key: Boolean(process.env.stripe_publishable_key),
     STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+    GITHUB_PUSH_TOKEN: Boolean(process.env.GITHUB_PUSH_TOKEN),
     NODE_ENV: process.env.NODE_ENV,
     RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
   };
