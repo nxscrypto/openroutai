@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { stripeConfigured, getStripe } from '@/lib/stripe';
-import AddCardForm from './AddCardForm';
 
 interface Card {
   stripe_payment_method_id: string;
@@ -80,6 +79,7 @@ export default async function BillingPage() {
   }> = [];
 
   if (stripeReady) {
+    let productErr: string | null = null;
     try {
       const stripe = getStripe();
       const prods = await stripe.products.list({ active: true, limit: 20 });
@@ -99,7 +99,8 @@ export default async function BillingPage() {
         });
       }
     } catch (e) {
-      console.error('[billing] product list error:', (e as Error).message);
+      productErr = (e as Error).message;
+      console.error('[billing] product list error:', productErr);
     }
   }
 
@@ -109,6 +110,9 @@ export default async function BillingPage() {
     const cur = currency.toUpperCase();
     return `$${amt} ${cur}${recurring ? ` / ${recurring.interval}` : ''}`;
   };
+
+  // (AddCardForm removed temporarily for debugging — will re-add after fixing)
+  const addCardError: string | null = null;
 
   return (
     <div className="max-w-[920px]">
@@ -122,7 +126,13 @@ export default async function BillingPage() {
         </div>
       )}
 
-      {/* Payment methods — inline add-card form on our own page */}
+      {addCardError && (
+        <div className="bg-[#3a1a1a] text-[#ff8585] rounded-[12px] p-4 mb-6 text-[13px]">
+          {addCardError}
+        </div>
+      )}
+
+      {/* Payment methods — temporarily just show status, no inline form */}
       <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -157,12 +167,10 @@ export default async function BillingPage() {
         {stripeReady && (
           <div className="mt-4 pt-5 border-t border-border">
             <div className="text-[12px] uppercase tracking-[0.16em] text-text-4 mb-3">Add a new card</div>
-            <AddCardForm
-              onAdded={() => {
-                // Server components can't navigate; the form sets ?added=1 via return_url
-                // and the page-level reload will re-render with the new card.
-              }}
-            />
+            <p className="text-[13px] text-text-4">
+              We&rsquo;re re-enabling inline card entry shortly. For now, please use the Stripe customer portal
+              below to manage your payment methods.
+            </p>
           </div>
         )}
       </div>
