@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
 
     for (const user of users.rows) {
+      if (!user.stripe_customer_id) continue;
       try {
         // List all charges for this customer
         const charges = await stripe.charges.list({ customer: user.stripe_customer_id, limit: 50 });
