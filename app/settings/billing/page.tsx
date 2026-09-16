@@ -176,17 +176,24 @@ export default async function BillingPage() {
               const cur = inv.currency.toUpperCase();
               const created = new Date(inv.created_at);
               const isPaid = inv.status === 'paid';
+              const isRecurring = inv.kind === 'subscription';
               return (
                 <div key={inv.id} className="flex items-center justify-between bg-card-alt hairline rounded-[10px] px-4 py-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[10.5px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded ${isPaid ? 'bg-[#1e3a23] text-[#7fd490]' : 'bg-[#3a2a17] text-[#ffd479]'}`}>
                         {inv.status}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded bg-[#1e2a3a] text-[#7da3d4]">
+                        {isRecurring ? 'Recurring' : 'One-time'}
                       </span>
                       <span className="text-[14px] font-mono">${amt} {cur}</span>
                       <span className="text-[11.5px] text-text-4">·</span>
                       <span className="text-[11.5px] text-text-4">{created.toLocaleDateString()}</span>
                     </div>
+                    {inv.description && (
+                      <div className="text-[11.5px] text-text-4 mt-1 line-clamp-1">{inv.description}</div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {inv.hosted_invoice_url && (
