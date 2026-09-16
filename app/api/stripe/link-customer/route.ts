@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         console.error(`[link-customer] failed to persist invoice ${inv.id}:`, (e as Error).message);
       }
-    }
+      }
     }
 
     return NextResponse.json({
