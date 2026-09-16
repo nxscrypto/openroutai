@@ -4,15 +4,15 @@ import { query } from '@/lib/db';
 import { getStripe } from '@/lib/stripe';
 
 // POST /api/stripe/checkout
-// Creates a Stripe Checkout Session in "setup" mode — collects a card, attaches it
-// to the Stripe Customer, returns the card to /settings/billing?added=1 on success.
-// We don't charge anything; this is card-on-file. Later you can flip it to subscription.
+// body: { price_id?: string } — if provided, create a subscription checkout session;
+// otherwise create a setup-mode session to add a card-on-file.
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const stripe = getStripe();
-  // Lazily create the customer if missing
+
+  // Lazily create the Stripe customer if missing.
   let customerId = user.stripe_customer_id;
   if (!customerId) {
     const customer = await stripe.customers.create({
@@ -24,25 +24,65 @@ export async function POST(req: NextRequest) {
     await query(`UPDATE or_users SET stripe_customer_id = $1 WHERE id = $2`, [customerId, user.id]);
   }
 
-  // Determine the origin for success/cancel URLs
+  let body: { price_id?: string; mode?: 'subscription' | 'setup' | 'payment' } = {};
+  try { body = await req.json(); } catch {}
+  // Allow form-encoded too
+  if (!body.price_id && req.headers.get('content-type')?.includes('form')) {
+    const form = await req.formData();
+    body.price_id = (form.get('price_id') as string) || undefined;
+    body.mode = (form.get('mode') as 'subscription' | 'setup') || undefined;
+  }
+
   const origin =
     req.headers.get('origin') ||
     (process.env.NEXT_PUBLIC_APP_URL || 'https://openroutai.com').replace(/\/$/, '');
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'setup',          // card-on-file, no immediate charge
-    customer: customerId,
-    payment_method_types: ['card'],
-    success_url: `${origin}/settings/billing?added=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/settings/billing?cancelled=1`,
-    metadata: { or_user_id: user.id, purpose: 'add_card' },
-  });
+  // Determine checkout mode
+  let price: { id: string; recurring: unknown; unit_amount: number | null } | null = null;
+  if (body.price_id) {
+    const p = await stripe.prices.retrieve(body.price_id);
+    price = { id: p.id, recurring: p.recurring, unit_amount: p.unit_amount };
+  }
+
+  let session;
+  if (price && price.recurring) {
+    // Subscription checkout
+    session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      line_items: [{ price: price.id, quantity: 1 }],
+      payment_method_types: ['card'],
+      success_url: `${origin}/settings/billing?subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/settings/billing?cancelled=1`,
+      metadata: { or_user_id: user.id, price_id: price.id },
+    });
+  } else if (price && !price.recurring && price.unit_amount !== null) {
+    // One-time payment
+    session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer: customerId,
+      line_items: [{ price: price.id, quantity: 1 }],
+      payment_method_types: ['card'],
+      success_url: `${origin}/settings/billing?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/settings/billing?cancelled=1`,
+      metadata: { or_user_id: user.id, price_id: price.id },
+    });
+  } else {
+    // Setup mode — card on file
+    session = await stripe.checkout.sessions.create({
+      mode: 'setup',
+      customer: customerId,
+      payment_method_types: ['card'],
+      success_url: `${origin}/settings/billing?added=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/settings/billing?cancelled=1`,
+      metadata: { or_user_id: user.id, purpose: 'add_card' },
+    });
+  }
 
   if (!session.url) {
     return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 502 });
   }
 
-  // If the request was a form POST (no JS), redirect. If JSON, return the URL.
   const accept = req.headers.get('accept') || '';
   if (accept.includes('application/json')) {
     return NextResponse.json({ url: session.url });
