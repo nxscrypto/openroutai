@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/stripe/portal — creates a Stripe Customer Portal session
 // (manages cards, subscriptions, invoices, etc.)
 // Supports GET so that <a href=...> links work without a form POST
