@@ -13,6 +13,31 @@ interface Card {
   created_at: string;
 }
 
+interface Sub {
+  id: string;
+  stripe_subscription_id: string | null;
+  status: string;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  stripe_price_id: string | null;
+}
+
+interface Invoice {
+  id: string;
+  stripe_invoice_id: string;
+  amount_due_cents: number;
+  amount_paid_cents: number;
+  currency: string;
+  status: string;
+  description: string | null;
+  hosted_invoice_url: string | null;
+  invoice_pdf_url: string | null;
+  created_at: string;
+  paid_at: string | null;
+  period_start: string | null;
+  period_end: string | null;
+}
+
 export default async function BillingPage() {
   const user = await getSessionUser();
   if (!user) redirect('/login');
@@ -22,6 +47,25 @@ export default async function BillingPage() {
      FROM or_payment_methods WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC`,
     [user.id]
   );
+
+  const subs = await query<Sub>(
+    `SELECT id, stripe_subscription_id, status, current_period_end, cancel_at_period_end, stripe_price_id
+     FROM or_subscriptions WHERE user_id = $1 ORDER BY created_at DESC`,
+    [user.id]
+  );
+
+  let invoices: { rows: Invoice[] } = { rows: [] };
+  try {
+    invoices = await query<Invoice>(
+      `SELECT id, stripe_invoice_id, amount_due_cents, amount_paid_cents, currency, status,
+              description, hosted_invoice_url, invoice_pdf_url, created_at, paid_at,
+              period_start, period_end
+       FROM or_invoices WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [user.id]
+    );
+  } catch (e) {
+    console.error('[billing] invoices query failed:', (e as Error).message);
+  }
 
   const stripeReady = stripeConfigured();
   let products: any[] = [];
@@ -52,9 +96,7 @@ export default async function BillingPage() {
   return (
     <div>
       <h1 className="text-[26px] font-semibold mb-4">Billing</h1>
-      <p>Cards on file: {cards.rows.length}</p>
-      <p>Stripe configured: {stripeReady ? 'yes' : 'no'}</p>
-      <p>Products: {products.length}</p>
+      <p>Cards: {cards.rows.length}, Subs: {subs.rows.length}, Invoices: {invoices.rows.length}, Products: {products.length}</p>
       {productError && <p style={{color:'red'}}>Product error: {productError}</p>}
     </div>
   );
