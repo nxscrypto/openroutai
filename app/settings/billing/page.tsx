@@ -40,22 +40,43 @@ interface Invoice {
 }
 
 export default async function BillingPage() {
-  const user = await getSessionUser();
+  let user;
+  try {
+    user = await getSessionUser();
+  } catch (e) {
+    console.error('[billing] getSessionUser failed:', (e as Error).message);
+    return (
+      <div className="bg-[#3a1a1a] text-[#ff8585] rounded-[12px] p-4">
+        Auth error: {(e as Error).message}
+      </div>
+    );
+  }
   if (!user) redirect('/login');
 
-  const cards = await query<Card>(
-    `SELECT stripe_payment_method_id, brand, last4, exp_month, exp_year, is_default, created_at
-     FROM or_payment_methods WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC`,
-    [user.id]
-  );
-
-  const subs = await query<Sub>(
-    `SELECT id, stripe_subscription_id, status, current_period_end, cancel_at_period_end, stripe_price_id
-     FROM or_subscriptions WHERE user_id = $1 ORDER BY created_at DESC`,
-    [user.id]
-  );
-
+  let cards: { rows: Card[] } = { rows: [] };
+  let subs: { rows: Sub[] } = { rows: [] };
   let invoices: { rows: Invoice[] } = { rows: [] };
+
+  try {
+    cards = await query<Card>(
+      `SELECT stripe_payment_method_id, brand, last4, exp_month, exp_year, is_default, created_at
+       FROM or_payment_methods WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC`,
+      [user.id]
+    );
+  } catch (e) {
+    console.error('[billing] cards query failed:', (e as Error).message);
+  }
+
+  try {
+    subs = await query<Sub>(
+      `SELECT id, stripe_subscription_id, status, current_period_end, cancel_at_period_end, stripe_price_id
+       FROM or_subscriptions WHERE user_id = $1 ORDER BY created_at DESC`,
+      [user.id]
+    );
+  } catch (e) {
+    console.error('[billing] subs query failed:', (e as Error).message);
+  }
+
   try {
     invoices = await query<Invoice>(
       `SELECT id, stripe_invoice_id, amount_due_cents, amount_paid_cents, currency, status,
@@ -68,22 +89,8 @@ export default async function BillingPage() {
     console.error('[billing] invoices query failed:', (e as Error).message);
   }
 
+  let products: Array<any> = [];
   const stripeReady = stripeConfigured();
-
-  // Pull active products from Stripe
-  let products: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    prices: Array<{
-      id: string;
-      amount: number | null;
-      currency: string;
-      recurring: { interval: string; interval_count: number } | null;
-      nickname: string | null;
-    }>;
-  }> = [];
-
   if (stripeReady) {
     try {
       const stripe = getStripe();
@@ -98,13 +105,12 @@ export default async function BillingPage() {
             id: pr.id,
             amount: pr.unit_amount,
             currency: pr.currency,
-            recurring: pr.recurring ? { interval: pr.recurring.interval, interval_count: pr.recurring.interval_count } : null,
-            nickname: pr.nickname,
+            recurring: pr.recurring ? { interval: pr.recurring.interval } : null,
           })),
         });
       }
     } catch (e) {
-      console.error('[billing] product list error:', (e as Error).message);
+      console.error('[billing] products fetch failed:', (e as Error).message);
     }
   }
 
@@ -120,20 +126,11 @@ export default async function BillingPage() {
       <h1 className="text-[26px] font-semibold mb-1">Billing</h1>
       <p className="text-[13.5px] text-text-4 mb-8">Add a payment method, choose a plan, view invoices.</p>
 
-      {!stripeReady && (
-        <div className="bg-[#3a2a17] text-[#ffd479] rounded-[12px] p-4 mb-6 text-[13px]">
-          <strong>Stripe is not configured on this server.</strong>{' '}
-          Add <code>stripe_secret</code> and <code>stripe_publishable_key</code> as Railway env vars, then redeploy.
-        </div>
-      )}
-
-      {/* Payment methods — inline add-card form on our own page */}
+      {/* Payment methods */}
       <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-1">Payment methods</div>
-            <div className="text-[14px] text-text-2">Cards on file for future charges</div>
-          </div>
+        <div className="mb-4">
+          <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-1">Payment methods</div>
+          <div className="text-[14px] text-text-2">Cards on file for future charges</div>
         </div>
 
         {cards.rows.length === 0 ? (
@@ -162,39 +159,12 @@ export default async function BillingPage() {
         {stripeReady && (
           <div className="mt-4 pt-5 border-t border-border">
             <div className="text-[12px] uppercase tracking-[0.16em] text-text-4 mb-3">Add a new card</div>
-            <AddCardForm
-              onAdded={() => {
-                // Server components can't navigate; the form sets ?added=1 via return_url
-                // and the page-level reload will re-render with the new card.
-              }}
-            />
+            <AddCardForm onAdded={() => {}} />
           </div>
         )}
       </div>
 
-      {/* Active subscriptions */}
-      {subs.rows.length > 0 && (
-        <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-3">Active subscriptions</div>
-          <div className="space-y-3">
-            {subs.rows.map((s) => (
-              <div key={s.id} className="flex items-center justify-between bg-card-alt hairline rounded-[10px] px-4 py-3">
-                <div>
-                  <div className="text-[14px] font-semibold capitalize">{s.status.replace(/_/g, ' ')}</div>
-                  {s.current_period_end && (
-                    <div className="text-[11.5px] text-text-4 mt-0.5">
-                      {s.cancel_at_period_end ? 'Cancels' : 'Renews'} {new Date(s.current_period_end).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-                <span className="text-[11px] text-text-4 font-mono">{s.stripe_price_id?.slice(0, 18) || '—'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Invoices — newest first */}
+      {/* Invoices */}
       {invoices.rows.length > 0 && (
         <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
           <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-3">Invoices</div>
@@ -215,30 +185,15 @@ export default async function BillingPage() {
                       <span className="text-[11.5px] text-text-4">·</span>
                       <span className="text-[11.5px] text-text-4">{created.toLocaleDateString()}</span>
                     </div>
-                    {inv.description && (
-                      <div className="text-[11.5px] text-text-4 mt-1 line-clamp-1">{inv.description}</div>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {inv.hosted_invoice_url && (
-                      <a
-                        href={inv.hosted_invoice_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[12px] text-text-2 hover:text-text underline px-2 py-1"
-                      >
-                        View
-                      </a>
+                      <a href={inv.hosted_invoice_url} target="_blank" rel="noopener noreferrer"
+                        className="text-[12px] text-text-2 hover:text-text underline px-2 py-1">View</a>
                     )}
                     {inv.invoice_pdf_url && (
-                      <a
-                        href={inv.invoice_pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[12px] font-semibold text-bg bg-accent hover:bg-accent-hover rounded-full px-3 py-1.5 transition-colors"
-                      >
-                        PDF
-                      </a>
+                      <a href={inv.invoice_pdf_url} target="_blank" rel="noopener noreferrer"
+                        className="text-[12px] font-semibold text-bg bg-accent hover:bg-accent-hover rounded-full px-3 py-1.5 transition-colors">PDF</a>
                     )}
                   </div>
                 </div>
@@ -253,25 +208,21 @@ export default async function BillingPage() {
         <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
           <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-3">Plans &amp; services</div>
           <div className="grid gap-3">
-            {products.map((p) => (
+            {products.map((p: any) => (
               <div key={p.id} className="bg-card-alt hairline rounded-[12px] p-5">
                 <div className="flex items-baseline justify-between gap-4 mb-2">
                   <div className="text-[16px] font-semibold">{p.name}</div>
                   {p.description && <div className="text-[12px] text-text-4 text-right max-w-[60%]">{p.description}</div>}
                 </div>
                 <div className="space-y-2 mt-3">
-                  {p.prices.map((pr) => (
+                  {p.prices.map((pr: any) => (
                     <div key={pr.id} className="flex items-center justify-between bg-bg/40 rounded-[8px] px-3 py-2.5">
                       <div>
                         <div className="text-[14px] font-mono">{fmtPrice(pr.amount, pr.currency, pr.recurring)}</div>
-                        {pr.nickname && <div className="text-[11px] text-text-4">{pr.nickname}</div>}
                       </div>
                       <form action="/api/stripe/checkout" method="POST">
                         <input type="hidden" name="price_id" value={pr.id} />
-                        <button
-                          type="submit"
-                          className="text-[12.5px] font-semibold text-bg bg-accent rounded-full px-4 py-2 shadow-btn-primary hover:bg-accent-hover transition-colors"
-                        >
+                        <button type="submit" className="text-[12.5px] font-semibold text-bg bg-accent rounded-full px-4 py-2 shadow-btn-primary hover:bg-accent-hover transition-colors">
                           {pr.recurring ? 'Subscribe' : 'Buy'}
                         </button>
                       </form>
