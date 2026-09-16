@@ -71,11 +71,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Common checkout options: card-only, no Link/wallets, no extras
-    const commonCheckout = {
+    // NOTE: allow_promotion_codes is NOT allowed in setup mode (Stripe rejects).
+    // We only set it for subscription/payment modes.
+    const baseCheckout = {
       customer: customerId,
       payment_method_types: ['card'] as ('card')[],
-      // Disable extras that can slow rendering or cause hangs
-      allow_promotion_codes: false,
       consent_collection: { terms_of_service: 'none' as const, promotions: 'none' as const },
       tax_id_collection: { enabled: false },
       metadata: { or_user_id: user.id },
@@ -85,31 +85,33 @@ export async function POST(req: NextRequest) {
     if (price && price.recurring) {
       // Subscription checkout
       session = await stripe.checkout.sessions.create({
-        ...commonCheckout,
+        ...baseCheckout,
+        allow_promotion_codes: false,
         mode: 'subscription',
         line_items: [{ price: price.id, quantity: 1 }],
         success_url: `${origin}/settings/billing?subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { ...commonCheckout.metadata, price_id: price.id },
+        metadata: { ...baseCheckout.metadata, price_id: price.id },
       });
     } else if (price && !price.recurring && price.unit_amount !== null) {
       // One-time payment
       session = await stripe.checkout.sessions.create({
-        ...commonCheckout,
+        ...baseCheckout,
+        allow_promotion_codes: false,
         mode: 'payment',
         line_items: [{ price: price.id, quantity: 1 }],
         success_url: `${origin}/settings/billing?paid=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { ...commonCheckout.metadata, price_id: price.id },
+        metadata: { ...baseCheckout.metadata, price_id: price.id },
       });
     } else {
-      // Setup mode — card on file
+      // Setup mode — card on file. No allow_promotion_codes here (Stripe rejects).
       session = await stripe.checkout.sessions.create({
-        ...commonCheckout,
+        ...baseCheckout,
         mode: 'setup',
         success_url: `${origin}/settings/billing?added=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { ...commonCheckout.metadata, purpose: 'add_card' },
+        metadata: { ...baseCheckout.metadata, purpose: 'add_card' },
       });
     }
 
