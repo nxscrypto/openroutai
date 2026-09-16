@@ -42,9 +42,23 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    const origin =
-      req.headers.get('origin') ||
-      (process.env.NEXT_PUBLIC_APP_URL || 'https://openroutai.com').replace(/\/$/, '');
+    // Build origin: prefer Origin header (set by browser on fetch + form POST),
+    // then NEXT_PUBLIC_APP_URL, then Host header, then openroutai.com default.
+    let origin = req.headers.get('origin');
+    if (!origin || origin.includes('localhost')) {
+      const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (envUrl && !envUrl.includes('localhost')) origin = envUrl;
+    }
+    if (!origin || origin.includes('localhost')) {
+      const host = req.headers.get('host');
+      if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        origin = `https://${host}`;
+      }
+    }
+    if (!origin || origin.includes('localhost')) {
+      origin = 'https://openroutai.com';
+    }
+    origin = origin.replace(/\/$/, '');
 
     // Determine checkout mode
     let price: { id: string; recurring: unknown; unit_amount: number | null } | null = null;
