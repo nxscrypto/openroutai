@@ -3,6 +3,7 @@ import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { stripeConfigured, getStripe } from '@/lib/stripe';
 import AddCardForm from './AddCardForm';
+import BuyButton from './BuyButton';
 
 interface Card {
   stripe_payment_method_id: string;
@@ -220,12 +221,7 @@ export default async function BillingPage() {
                       <div>
                         <div className="text-[14px] font-mono">{fmtPrice(pr.amount, pr.currency, pr.recurring)}</div>
                       </div>
-                      <form action="/api/stripe/checkout" method="POST">
-                        <input type="hidden" name="price_id" value={pr.id} />
-                        <button type="submit" className="text-[12.5px] font-semibold text-bg bg-accent rounded-full px-4 py-2 shadow-btn-primary hover:bg-accent-hover transition-colors">
-                          {pr.recurring ? 'Subscribe' : 'Buy'}
-                        </button>
-                      </form>
+                      <BuyButton priceId={pr.id} label={pr.recurring ? 'Subscribe' : 'Buy'} />
                     </div>
                   ))}
                 </div>
@@ -238,11 +234,12 @@ export default async function BillingPage() {
       {/* Stripe customer portal */}
       {user.stripe_customer_id && stripeReady && (
         <div className="mt-6 text-center">
-          <form action="/api/stripe/portal" method="POST" className="inline">
-            <button type="submit" className="text-[12.5px] text-text-4 hover:text-text underline">
-              Manage billing &amp; view invoices in the Stripe portal →
-            </button>
-          </form>
+          <a
+            href={`/api/stripe/portal?customer_id=${user.stripe_customer_id}`}
+            className="text-[12.5px] text-text-4 hover:text-text underline"
+          >
+            Manage billing &amp; view invoices in the Stripe portal →
+          </a>
         </div>
       )}
     </div>

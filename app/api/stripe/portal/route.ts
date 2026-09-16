@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripe, webhookSecret } from '@/lib/stripe';
-import { query } from '@/lib/db';
+import { getStripe } from '@/lib/stripe';
 
-// POST /api/stripe/portal — creates a Stripe Customer Portal session
+// GET /api/stripe/portal — creates a Stripe Customer Portal session
 // (manages cards, subscriptions, invoices, etc.)
-export async function POST(req: NextRequest) {
+// Supports GET so that <a href=...> links work without a form POST
+// (CloudFront blocks POST to non-cached paths)
+export async function GET(req: NextRequest) {
   const stripe = getStripe();
   const { getSessionUser } = await import('@/lib/auth');
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  if (!user) {
+    const origin = req.headers.get('origin') || 'https://openroutai.com';
+    return NextResponse.redirect(`${origin}/login`);
+  }
   if (!user.stripe_customer_id) {
     return NextResponse.json({ error: 'No Stripe customer linked yet' }, { status: 400 });
   }
