@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { stripeConfigured, getStripe } from '@/lib/stripe';
+import AddCardForm from './AddCardForm';
 
 interface Card {
   stripe_payment_method_id: string;
