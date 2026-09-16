@@ -161,9 +161,62 @@ export async function POST(req: NextRequest) {
       }
 
       case 'invoice.paid':
-      case 'invoice.payment_failed': {
-        // Log for now; could trigger email notifications later.
-        console.log(`[webhook] ${event.type}: invoice ${(event.data.object as { id: string }).id}`);
+      case 'invoice.payment_failed':
+      case 'invoice.finalized':
+      case 'invoice.created': {
+        const inv = event.data.object as Stripe.Invoice;
+        // Find user via stripe_customer_id
+        let userId: string | null = null;
+        if (inv.customer) {
+          const r = await query<{ id: string }>(
+            `SELECT id FROM or_users WHERE stripe_customer_id = $1`,
+            [inv.customer]
+          );
+          if (r.rows[0]) userId = r.rows[0].id;
+        }
+        if (!userId) {
+          console.warn(`[webhook] invoice ${inv.id}: user not found for customer ${inv.customer}`);
+          break;
+        }
+        const subscriptionId = (inv.subscription as string | null) || null;
+        const periodStart = inv.period_start ? new Date(inv.period_start * 1000).toISOString() : null;
+        const periodEnd = inv.period_end ? new Date(inv.period_end * 1000).toISOString() : null;
+        const paidAt = inv.status === 'paid' && inv.status_transitions?.paid_at
+          ? new Date(inv.status_transitions.paid_at * 1000).toISOString()
+          : null;
+        // Compose description: line items if available
+        const desc = (inv.lines?.data?.[0]?.description as string | undefined) || null;
+        await query(
+          `INSERT INTO or_invoices (
+            user_id, stripe_invoice_id, stripe_subscription_id,
+            amount_due_cents, amount_paid_cents, currency, status,
+            description, hosted_invoice_url, invoice_pdf_url,
+            period_start, period_end, paid_at
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+          ON CONFLICT (stripe_invoice_id) DO UPDATE SET
+            status = EXCLUDED.status,
+            amount_due_cents = EXCLUDED.amount_due_cents,
+            amount_paid_cents = EXCLUDED.amount_paid_cents,
+            hosted_invoice_url = EXCLUDED.hosted_invoice_url,
+            invoice_pdf_url = EXCLUDED.invoice_pdf_url,
+            paid_at = EXCLUDED.paid_at,
+            description = EXCLUDED.description`,
+          [
+            userId,
+            inv.id,
+            subscriptionId,
+            inv.amount_due,
+            inv.amount_paid,
+            inv.currency,
+            inv.status,
+            desc,
+            inv.hosted_invoice_url || null,
+            inv.invoice_pdf || null,
+            periodStart,
+            periodEnd,
+            paidAt,
+          ]
+        );
         break;
       }
 
