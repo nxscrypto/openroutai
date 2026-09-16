@@ -99,6 +99,7 @@ export default async function BillingPage() {
       <h1 className="text-[26px] font-semibold mb-4">Billing</h1>
       <p>Cards: {cards.rows.length}, Subs: {subs.rows.length}, Invoices: {invoices.rows.length}, Products: {products.length}</p>
       {productError && <p style={{color:'red'}}>Product error: {productError}</p>}
+      {stripeReady && <AddCardForm onAdded={() => {}} />}
     </div>
   );
 }
