@@ -159,7 +159,7 @@ export default async function BillingPage() {
         {stripeReady && (
           <div className="mt-4 pt-5 border-t border-border">
             <div className="text-[12px] uppercase tracking-[0.16em] text-text-4 mb-3">Add a new card</div>
-            <AddCardForm onAdded={() => {}} />
+            <AddCardForm />
           </div>
         )}
       </div>
