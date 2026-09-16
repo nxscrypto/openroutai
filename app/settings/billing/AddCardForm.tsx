@@ -6,8 +6,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import type { StripeElementsOptions } from '@stripe/stripe-js';
 
 // Client-only component. Manages its own success state via window reload after
-// Stripe confirms the setup. No event-handler props are passed in — the parent
-// server component just renders <AddCardForm />.
+// Stripe confirms the setup. No event-handler props are passed in.
 
 interface SetupData {
   client_secret: string;
@@ -15,29 +14,15 @@ interface SetupData {
   publishable_key: string;
 }
 
-// Cache the Stripe promise so we only load it once per session
 let stripePromise: Promise<Stripe | null> | null = null;
 function getStripePromise(pk: string) {
   if (!stripePromise) stripePromise = loadStripe(pk);
   return stripePromise;
 }
 
+// Minimal CardElement options — visual styling goes through Elements `appearance`
 const CARD_OPTIONS = {
-  hidePostalCode: false,
-  style: {
-    base: {
-      color: '#e8e8e8',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      fontSize: '15px',
-      fontSmoothing: 'antialiased',
-      '::placeholder': { color: '#6b6b6b' },
-      iconColor: '#7dd3a0',
-    },
-    invalid: {
-      color: '#ff8585',
-      iconColor: '#ff8585',
-    },
-  },
+  hidePostalCode: true,  // we collect ZIP separately below
 };
 
 function CardForm() {
@@ -45,6 +30,8 @@ function CardForm() {
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [zip, setZip] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +42,19 @@ function CardForm() {
     setSubmitting(true);
     setError(null);
 
-    const { error: stripeErr, setupIntent } = await stripe.confirmSetup({
+    // Use redirect: 'always' so Stripe Link auth → returns to ?added=1 cleanly
+    const { error: stripeErr } = await stripe.confirmSetup({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/settings/billing?added=1`,
+        payment_method_data: {
+          billing_details: {
+            name: name.trim() || undefined,
+            address: { postal_code: zip.trim() || undefined },
+          },
+        },
       },
-      redirect: 'if_required',
+      redirect: 'if_required',  // for non-Link cards, finish inline
     });
 
     if (stripeErr) {
@@ -68,25 +62,59 @@ function CardForm() {
       setSubmitting(false);
       return;
     }
-    if (setupIntent && setupIntent.status === 'succeeded') {
-      // Reload the page to pick up the new card
-      window.location.reload();
-    } else {
-      setError('Setup did not complete. Please try again.');
-      setSubmitting(false);
-    }
+
+    // If confirmSetup returned without redirect (e.g. Link auth was required
+    // and user completed it inline), reload to pick up the new card.
+    // Otherwise Stripe has already redirected to ?added=1 and this code is moot.
+    window.location.href = `${window.location.origin}/settings/billing?added=1`;
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-bg border border-border rounded-[10px] p-4">
-        <CardElement options={CARD_OPTIONS} />
+      <div>
+        <label className="block text-[11.5px] uppercase tracking-[0.14em] text-text-4 mb-2">
+          Name on card
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Brent Campbell"
+          autoComplete="cc-name"
+          className="w-full bg-bg border border-border rounded-[10px] px-4 py-3 text-[14px] text-text placeholder-text-4 focus:outline-none focus:border-accent"
+        />
       </div>
+
+      <div>
+        <label className="block text-[11.5px] uppercase tracking-[0.14em] text-text-4 mb-2">
+          Card details
+        </label>
+        <div className="bg-bg border border-border rounded-[10px] p-4">
+          <CardElement options={CARD_OPTIONS} />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[11.5px] uppercase tracking-[0.14em] text-text-4 mb-2">
+          ZIP / Postal code
+        </label>
+        <input
+          type="text"
+          value={zip}
+          onChange={(e) => setZip(e.target.value)}
+          placeholder="33305"
+          autoComplete="postal-code"
+          maxLength={10}
+          className="w-full bg-bg border border-border rounded-[10px] px-4 py-3 text-[14px] text-text placeholder-text-4 focus:outline-none focus:border-accent"
+        />
+      </div>
+
       {error && (
         <div className="bg-[#3a1a1a] text-[#ff8585] rounded-[10px] px-4 py-3 text-[13px]">
           {error}
         </div>
       )}
+
       <button
         type="submit"
         disabled={!stripe || submitting}
@@ -118,9 +146,7 @@ export default function AddCardForm() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="text-[13px] text-text-4 py-4 text-center">Loading payment form…</div>
-    );
+    return <div className="text-[13px] text-text-4 py-4 text-center">Loading payment form…</div>;
   }
   if (fetchError || !setupData) {
     return (
@@ -130,7 +156,7 @@ export default function AddCardForm() {
     );
   }
 
-  const stripePromise = getStripePromise(setupData.publishable_key);
+  const stripe = getStripePromise(setupData.publishable_key);
   const options: StripeElementsOptions = {
     clientSecret: setupData.client_secret,
     appearance: {
@@ -148,7 +174,7 @@ export default function AddCardForm() {
   };
 
   return (
-    <Elements stripe={stripePromise} options={options}>
+    <Elements stripe={stripe} options={options}>
       <CardForm />
     </Elements>
   );
