@@ -23,6 +23,22 @@ interface Sub {
   stripe_price_id: string | null;
 }
 
+interface Invoice {
+  id: string;
+  stripe_invoice_id: string;
+  amount_due_cents: number;
+  amount_paid_cents: number;
+  currency: string;
+  status: string;
+  description: string | null;
+  hosted_invoice_url: string | null;
+  invoice_pdf_url: string | null;
+  created_at: string;
+  paid_at: string | null;
+  period_start: string | null;
+  period_end: string | null;
+}
+
 export default async function BillingPage() {
   const user = await getSessionUser();
   if (!user) redirect('/login');
@@ -36,6 +52,14 @@ export default async function BillingPage() {
   const subs = await query<Sub>(
     `SELECT id, stripe_subscription_id, status, current_period_end, cancel_at_period_end, stripe_price_id
      FROM or_subscriptions WHERE user_id = $1 ORDER BY created_at DESC`,
+    [user.id]
+  );
+
+  const invoices = await query<Invoice>(
+    `SELECT id, stripe_invoice_id, amount_due_cents, amount_paid_cents, currency, status,
+            description, hosted_invoice_url, invoice_pdf_url, created_at, paid_at,
+            period_start, period_end
+     FROM or_invoices WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
     [user.id]
   );
 
@@ -161,6 +185,60 @@ export default async function BillingPage() {
                 <span className="text-[11px] text-text-4 font-mono">{s.stripe_price_id?.slice(0, 18) || '—'}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Invoices — newest first */}
+      {invoices.rows.length > 0 && (
+        <div className="bg-surface hairline rounded-[14px] p-7 mb-6">
+          <div className="text-[11px] uppercase tracking-[0.16em] text-text-4 mb-3">Invoices</div>
+          <div className="space-y-2">
+            {invoices.rows.map((inv) => {
+              const amt = ((inv.amount_paid_cents || inv.amount_due_cents) / 100).toFixed(2);
+              const cur = inv.currency.toUpperCase();
+              const created = new Date(inv.created_at);
+              const isPaid = inv.status === 'paid';
+              return (
+                <div key={inv.id} className="flex items-center justify-between bg-card-alt hairline rounded-[10px] px-4 py-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10.5px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded ${isPaid ? 'bg-[#1e3a23] text-[#7fd490]' : 'bg-[#3a2a17] text-[#ffd479]'}`}>
+                        {inv.status}
+                      </span>
+                      <span className="text-[14px] font-mono">${amt} {cur}</span>
+                      <span className="text-[11.5px] text-text-4">·</span>
+                      <span className="text-[11.5px] text-text-4">{created.toLocaleDateString()}</span>
+                    </div>
+                    {inv.description && (
+                      <div className="text-[11.5px] text-text-4 mt-1 line-clamp-1">{inv.description}</div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {inv.hosted_invoice_url && (
+                      <a
+                        href={inv.hosted_invoice_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12px] text-text-2 hover:text-text underline px-2 py-1"
+                      >
+                        View
+                      </a>
+                    )}
+                    {inv.invoice_pdf_url && (
+                      <a
+                        href={inv.invoice_pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12px] font-semibold text-bg bg-accent hover:bg-accent-hover rounded-full px-3 py-1.5 transition-colors"
+                      >
+                        PDF
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
