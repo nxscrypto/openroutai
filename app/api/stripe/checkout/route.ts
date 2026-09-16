@@ -73,10 +73,10 @@ export async function POST(req: NextRequest) {
     // Common checkout options: card-only, no Link/wallets, no extras
     // NOTE: allow_promotion_codes is NOT allowed in setup mode (Stripe rejects).
     // We only set it for subscription/payment modes.
+    // NOTE: consent_collection requires ToS acceptance in dashboard — leave it out.
     const baseCheckout = {
       customer: customerId,
       payment_method_types: ['card'] as ('card')[],
-      consent_collection: { terms_of_service: 'none' as const, promotions: 'none' as const },
       tax_id_collection: { enabled: false },
       metadata: { or_user_id: user.id },
     };
