@@ -26,12 +26,20 @@ export async function POST(req: NextRequest) {
     }
 
     let body: { price_id?: string; mode?: 'subscription' | 'setup' | 'payment' } = {};
-    try { body = await req.json(); } catch {}
-    // Allow form-encoded too (the Add card button submits as a form)
-    if (!body.price_id && req.headers.get('content-type')?.includes('form')) {
-      const form = await req.formData();
-      body.price_id = (form.get('price_id') as string) || undefined;
-      body.mode = (form.get('mode') as 'subscription' | 'setup') || undefined;
+    const ct = req.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      try { body = await req.json(); } catch {}
+    } else if (ct.includes('form')) {
+      try {
+        const text = await req.text();
+        if (text) {
+          const params = new URLSearchParams(text);
+          const pid = params.get('price_id');
+          const m = params.get('mode');
+          if (pid) body.price_id = pid;
+          if (m) body.mode = m as 'subscription' | 'setup' | 'payment';
+        }
+      } catch {}
     }
 
     const origin =
