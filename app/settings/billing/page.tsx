@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { query } from '@/lib/db';
+import { stripeConfigured } from '@/lib/stripe';
 
 interface Card {
   stripe_payment_method_id: string;
@@ -22,10 +23,13 @@ export default async function BillingPage() {
     [user.id]
   );
 
+  const stripeReady = stripeConfigured();
+
   return (
     <div>
       <h1 className="text-[26px] font-semibold mb-4">Billing</h1>
       <p>Cards on file: {cards.rows.length}</p>
+      <p>Stripe configured: {stripeReady ? 'yes' : 'no'}</p>
     </div>
   );
 }
