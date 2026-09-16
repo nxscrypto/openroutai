@@ -97,7 +97,12 @@ export async function POST(req: NextRequest) {
           // `invoice` field is set when it's a subscription invoice payment.
           // Also: if it has no PI/invoice but has a description matching
           // subscription patterns, treat as recurring.
-          const isRecurring = !!(ch as any).invoice || /subscription/i.test(description);
+          const chargeAny = ch as any;
+          const isRecurring = !!(
+            chargeAny.invoice ||
+            /subscription/i.test(description) ||
+            /subscription/i.test(chargeAny.description || '')
+          );
           const kind = isRecurring ? 'subscription' : 'one_time';
 
           // Receipt URL is the closest thing to an invoice URL for a charge
@@ -148,6 +153,14 @@ export async function POST(req: NextRequest) {
     await query(`
       UPDATE or_invoices SET kind = 'subscription'
       WHERE stripe_subscription_id IS NOT NULL
+        AND (kind IS NULL OR kind = 'one_time')
+    `);
+
+    // For backfilled charges whose description mentions subscription, mark as 'subscription'
+    await query(`
+      UPDATE or_invoices SET kind = 'subscription'
+      WHERE stripe_invoice_id LIKE 'ch_%'
+        AND (description ILIKE '%subscription%' OR description ILIKE 'pi_%')
         AND (kind IS NULL OR kind = 'one_time')
     `);
 
