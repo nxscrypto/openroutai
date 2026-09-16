@@ -94,12 +94,16 @@ export async function POST(req: NextRequest) {
         metadata: { ...baseCheckout.metadata, price_id: price.id },
       });
     } else if (price && !price.recurring && price.unit_amount !== null) {
-      // One-time payment
+      // One-time payment — enable invoice creation so we get an or_invoices row
       session = await stripe.checkout.sessions.create({
         ...baseCheckout,
         allow_promotion_codes: false,
+        invoice_creation: { enabled: true },
         mode: 'payment',
         line_items: [{ price: price.id, quantity: 1 }],
+        payment_intent_data: {
+          metadata: { ...baseCheckout.metadata, price_id: price.id },
+        },
         success_url: `${origin}/settings/billing?paid=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
         metadata: { ...baseCheckout.metadata, price_id: price.id },
