@@ -17,43 +17,65 @@ export async function POST(req: NextRequest) {
     const stripe = getStripe();
     let customerId = user.stripe_customer_id;
 
-    // If user already has a customer, do nothing
-    if (customerId) {
-      return NextResponse.json({ ok: true, customer_id: customerId, action: 'already-set' });
-    }
+    // If user already has a customer, still search for OTHER customers
+    // with the same email — a previous broken flow may have created
+    // additional Stripe customers. Pull invoices from all of them.
+    const customerIds: string[] = customerId ? [customerId] : [];
 
-    // Otherwise create a customer. First check if Stripe has a customer
-    // already linked via metadata.or_user_id (set when earlier checkout
-    // sessions created customers lazily without updating our DB).
-    const byMeta = await stripe.customers.search({
-      query: `metadata['or_user_id']:'${user.id}'`,
-      limit: 1,
-    });
-    if (byMeta.data[0]) {
-      customerId = byMeta.data[0].id;
-    } else {
-      const byEmail = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (byEmail.data[0]) {
-        customerId = byEmail.data[0].id;
-      } else {
+    if (!customerId) {
+      // Search for an existing customer with our metadata
+      const byMeta = await stripe.customers.search({
+        query: `metadata['or_user_id']:'${user.id}'`,
+        limit: 5,
+      });
+      for (const c of byMeta.data) customerIds.push(c.id);
+
+      // Also list customers with the same email (in case prior checkout
+      // sessions created customers without metadata)
+      const byEmail = await stripe.customers.list({ email: user.email, limit: 10 });
+      for (const c of byEmail.data) {
+        if (!customerIds.includes(c.id)) customerIds.push(c.id);
+      }
+
+      if (customerIds.length === 0) {
+        // No existing customer — create one
         const created = await stripe.customers.create({
           email: user.email,
           name: user.name || undefined,
           metadata: { or_user_id: user.id },
         });
-        customerId = created.id;
+        customerIds.push(created.id);
       }
+
+      // Pick the primary customer (the one we'll link to the user)
+      customerId = customerIds[0];
+
+      // Backfill metadata on any old customers that lack or_user_id
+      for (const id of customerIds) {
+        try {
+          await stripe.customers.update(id, {
+            metadata: { or_user_id: user.id },
+          });
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      await query(
+        `UPDATE or_users SET stripe_customer_id = $1 WHERE id = $2`,
+        [customerId, user.id]
+      );
     }
 
-    await query(
-      `UPDATE or_users SET stripe_customer_id = $1 WHERE id = $2`,
-      [customerId, user.id]
-    );
-
-    // Re-pull any invoices from Stripe for this customer and persist them
-    const invoices = await stripe.invoices.list({ customer: customerId, limit: 50 });
+    // Re-pull any invoices from Stripe for ALL matching customers and persist them.
+    // We may have invoices spread across multiple Stripe customers (orphans
+    // from previous broken flows). Pull them all into or_invoices.
     let added = 0;
-    for (const inv of invoices.data) {
+    let totalSeen = 0;
+    for (const custId of customerIds) {
+      const invoices = await stripe.invoices.list({ customer: custId, limit: 50 });
+      totalSeen += invoices.data.length;
+      for (const inv of invoices.data) {
       try {
         const subId = (inv.subscription as string | null) || null;
         const desc = inv.lines?.data?.[0]?.description || null;
@@ -95,10 +117,13 @@ export async function POST(req: NextRequest) {
         console.error(`[link-customer] failed to persist invoice ${inv.id}:`, (e as Error).message);
       }
     }
+    }
 
     return NextResponse.json({
       ok: true,
       customer_id: customerId,
+      customers_found: customerIds,
+      invoices_seen: totalSeen,
       invoices_pulled: added,
     });
   } catch (e) {
