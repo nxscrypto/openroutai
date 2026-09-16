@@ -38,6 +38,7 @@ interface Invoice {
   paid_at: string | null;
   period_start: string | null;
   period_end: string | null;
+  kind: 'subscription' | 'one_time' | null;
 }
 
 export default async function BillingPage() {
@@ -82,7 +83,7 @@ export default async function BillingPage() {
     invoices = await query<Invoice>(
       `SELECT id, stripe_invoice_id, amount_due_cents, amount_paid_cents, currency, status,
               description, hosted_invoice_url, invoice_pdf_url, created_at, paid_at,
-              period_start, period_end
+              period_start, period_end, kind
        FROM or_invoices WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [user.id]
     );
