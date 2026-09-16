@@ -22,18 +22,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, customer_id: customerId, action: 'already-set' });
     }
 
-    // Otherwise create a customer. If there's already a Stripe customer with
-    // this email, reuse it.
-    const existing = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (existing.data[0]) {
-      customerId = existing.data[0].id;
+    // Otherwise create a customer. First check if Stripe has a customer
+    // already linked via metadata.or_user_id (set when earlier checkout
+    // sessions created customers lazily without updating our DB).
+    const byMeta = await stripe.customers.search({
+      query: `metadata['or_user_id']:'${user.id}'`,
+      limit: 1,
+    });
+    if (byMeta.data[0]) {
+      customerId = byMeta.data[0].id;
     } else {
-      const created = await stripe.customers.create({
-        email: user.email,
-        name: user.name || undefined,
-        metadata: { or_user_id: user.id },
-      });
-      customerId = created.id;
+      const byEmail = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (byEmail.data[0]) {
+        customerId = byEmail.data[0].id;
+      } else {
+        const created = await stripe.customers.create({
+          email: user.email,
+          name: user.name || undefined,
+          metadata: { or_user_id: user.id },
+        });
+        customerId = created.id;
+      }
     }
 
     await query(
