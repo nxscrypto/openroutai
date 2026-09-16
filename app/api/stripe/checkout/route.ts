@@ -6,6 +6,9 @@ import { getStripe } from '@/lib/stripe';
 // POST /api/stripe/checkout
 // body: { price_id?: string } — if provided, create a subscription checkout session;
 // otherwise create a setup-mode session to add a card-on-file.
+//
+// We explicitly set payment_method_types: ['card'] (no Link, no wallets) so
+// the Checkout page renders immediately without waiting on Link auth.
 export async function POST(req: NextRequest) {
   try {
     const user = await getSessionUser();
@@ -42,8 +45,8 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    // Build origin: prefer Origin header (set by browser on fetch + form POST),
-    // then NEXT_PUBLIC_APP_URL, then Host header, then openroutai.com default.
+    // Build origin: prefer Origin header, then NEXT_PUBLIC_APP_URL,
+    // then Host header, then openroutai.com default.
     let origin = req.headers.get('origin');
     if (!origin || origin.includes('localhost')) {
       const envUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -67,38 +70,46 @@ export async function POST(req: NextRequest) {
       price = { id: p.id, recurring: p.recurring, unit_amount: p.unit_amount };
     }
 
+    // Common checkout options: card-only, no Link/wallets, no extras
+    const commonCheckout = {
+      customer: customerId,
+      payment_method_types: ['card'] as ('card')[],
+      // Disable extras that can slow rendering or cause hangs
+      allow_promotion_codes: false,
+      consent_collection: { terms_of_service: 'none' as const, promotions: 'none' as const },
+      tax_id_collection: { enabled: false },
+      metadata: { or_user_id: user.id },
+    };
+
     let session;
     if (price && price.recurring) {
       // Subscription checkout
       session = await stripe.checkout.sessions.create({
+        ...commonCheckout,
         mode: 'subscription',
-        customer: customerId,
         line_items: [{ price: price.id, quantity: 1 }],
-        payment_method_types: ['card'],
         success_url: `${origin}/settings/billing?subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { or_user_id: user.id, price_id: price.id },
+        metadata: { ...commonCheckout.metadata, price_id: price.id },
       });
     } else if (price && !price.recurring && price.unit_amount !== null) {
       // One-time payment
       session = await stripe.checkout.sessions.create({
+        ...commonCheckout,
         mode: 'payment',
-        customer: customerId,
         line_items: [{ price: price.id, quantity: 1 }],
-        payment_method_types: ['card'],
         success_url: `${origin}/settings/billing?paid=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { or_user_id: user.id, price_id: price.id },
+        metadata: { ...commonCheckout.metadata, price_id: price.id },
       });
     } else {
       // Setup mode — card on file
       session = await stripe.checkout.sessions.create({
+        ...commonCheckout,
         mode: 'setup',
-        customer: customerId,
-        payment_method_types: ['card'],
         success_url: `${origin}/settings/billing?added=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/settings/billing?cancelled=1`,
-        metadata: { or_user_id: user.id, purpose: 'add_card' },
+        metadata: { ...commonCheckout.metadata, purpose: 'add_card' },
       });
     }
 
