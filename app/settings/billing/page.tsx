@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 import { stripeConfigured, getStripe } from '@/lib/stripe';
 import AddCardForm from './AddCardForm';
 import BuyButton from './BuyButton';
+import SetDefaultCardButton from './SetDefaultCardButton';
 
 interface Card {
   stripe_payment_method_id: string;
@@ -150,9 +151,10 @@ export default async function BillingPage() {
                     )}
                   </div>
                 </div>
-                {c.is_default && (
-                  <span className="text-[10.5px] uppercase tracking-[0.16em] text-accent">Default</span>
-                )}
+                <SetDefaultCardButton
+                  paymentMethodId={c.stripe_payment_method_id}
+                  isDefault={c.is_default}
+                />
               </div>
             ))}
           </div>
