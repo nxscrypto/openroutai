@@ -201,10 +201,15 @@ export default async function BillingPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {inv.hosted_invoice_url && (
+                    {inv.stripe_invoice_id.startsWith('ch_') ? (
+                      // Backfilled charge — link to our own branded receipt page
+                      <a href={`/receipts/${inv.id}`} target="_blank" rel="noopener noreferrer"
+                        className="text-[12px] text-text-2 hover:text-text underline px-2 py-1">View</a>
+                    ) : inv.hosted_invoice_url ? (
+                      // Real Stripe invoice — link to Stripe hosted page
                       <a href={inv.hosted_invoice_url} target="_blank" rel="noopener noreferrer"
                         className="text-[12px] text-text-2 hover:text-text underline px-2 py-1">View</a>
-                    )}
+                    ) : null}
                     {inv.invoice_pdf_url && (
                       <a href={inv.invoice_pdf_url} target="_blank" rel="noopener noreferrer"
                         className="text-[12px] font-semibold text-bg bg-accent hover:bg-accent-hover rounded-full px-3 py-1.5 transition-colors">PDF</a>
