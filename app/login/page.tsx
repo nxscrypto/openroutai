@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const router = useRouter();
@@ -54,11 +55,20 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="block text-[11px] uppercase tracking-[0.16em] text-text-4 mb-1.5">Password</label>
-            <input
-              type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-              autoComplete="current-password" placeholder="Your password"
-              className="w-full bg-card-alt hairline rounded-[9px] px-3.5 py-2.5 text-[14px] text-text focus:outline-none focus:border-accent"
-            />
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
+                autoComplete="current-password" placeholder="Your password"
+                className="w-full bg-card-alt hairline rounded-[9px] px-3.5 py-2.5 pr-[64px] text-[14px] text-text focus:outline-none focus:border-accent"
+              />
+              <button
+                type="button" onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-[10.5px] font-semibold uppercase tracking-[.1em] text-text-4 hover:text-accent px-2 py-1"
+              >
+                {showPw ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
 
           {err && <div className="text-[13px] text-[#ff8a80] bg-[#3a1717] rounded-[8px] px-3 py-2">{err}</div>}

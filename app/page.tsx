@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HeroCanvas from '@/components/HeroCanvas';
 
 // Copy from the README — final and approved, keep verbatim.
@@ -207,8 +207,17 @@ function AuthModal({
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   async function submit() {
     setErr(null);
@@ -238,7 +247,12 @@ function AuthModal({
     <div
       className="fixed inset-0 z-[60] grid place-items-center px-5 backdrop-blur-md"
       style={{ background: 'rgba(4,5,6,.78)' }}
-      onClick={onClose}
+      onMouseDown={(e) => {
+        // Only dismiss when the drag STARTS and ENDS on the backdrop.
+        // A click that begins inside the panel and drags out is a text
+        // selection, not an intentional dismissal.
+        if (e.target === e.currentTarget) onClose();
+      }}
       role="dialog"
       aria-modal="true"
     >
@@ -286,14 +300,24 @@ function AuthModal({
             autoComplete="email"
             className="bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] outline-none focus:border-accent/55 placeholder:text-text-5"
           />
-          <input
-            type="password"
-            placeholder="Password (min 8 chars)"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            className="bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] outline-none focus:border-accent/55 placeholder:text-text-5"
-          />
+          <div className="relative">
+            <input
+              type={showPw ? 'text' : 'password'}
+              placeholder="Password (min 8 chars)"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              className="w-full bg-surface-input text-text text-[14px] hairline-strong rounded-[10px] px-[14px] py-[13px] pr-[64px] outline-none focus:border-accent/55 placeholder:text-text-5"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              aria-label={showPw ? 'Hide password' : 'Show password'}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-[11px] font-semibold uppercase tracking-[.1em] text-text-5 hover:text-accent px-2 py-1"
+            >
+              {showPw ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </div>
 
         {err && (
